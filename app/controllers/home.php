@@ -1,0 +1,1 @@
+<?php echo '<h1 class="text-2xl">Welcome to Bakery Management</h1><p class="mt-2">Use the menu to navigate.</p>'; ?>
