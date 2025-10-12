@@ -1,4 +1,7 @@
-<!-- things were here -->
+ <?php
+    ob_start(); 
+    $user = $_SESSION['user_id'] ?? null;
+?>
 <!DOCTYPE html>
 <html lang="en" class="dark">
 <head>
@@ -43,37 +46,48 @@
             <span class="ml-4 text-xl font-bold hidden lg:block">DoughLight 🍪</span>
         </div>
         <nav class="mt-8">
-            <a href="public/?page=dashboard" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-lime-400 transition-colors">
+            <a href="?page=dashboard" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-lime-400 transition-colors">
                 <i data-feather="pie-chart" class="w-5 h-5"></i>
                 <span class="ml-4 hidden lg:block">Dashboard</span>
             </a>
-            <a href="public/?page=employees" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-lime-400 transition-colors">
+            <a href="?page=employees" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-lime-400 transition-colors">
                 <i data-feather="users" class="w-5 h-5"></i>
                 <span class="ml-4 hidden lg:block">Employees</span>
             </a>
-            <a href="public/?page=raw_materials" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-lime-400 transition-colors">
+            <a href="?page=raw_materials" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-lime-400 transition-colors">
                 <i data-feather="dollar-sign" class="w-5 h-5"></i>
                 <span class="ml-4 hidden lg:block">Materials</span>
             </a>
-            <a href="public/?page=products" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-lime-400 transition-colors">
+            <a href="?page=products" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-lime-400 transition-colors">
                 <i data-feather="package" class="w-5 h-5"></i>
                 <span class="ml-4 hidden lg:block">Products</span>
             </a>
-            <a href="public/?page=recipes" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-lime-400 transition-colors">
+            <a href="?page=recipes" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-lime-400 transition-colors">
                 <i data-feather="calendar" class="w-5 h-5"></i>
                 <span class="ml-4 hidden lg:block">Recipes</span>
             </a>
-            <a href="public/?page=production" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-lime-400 transition-colors">
+            <a href="?page=production" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-lime-400 transition-colors">
                 <i data-feather="settings" class="w-5 h-5"></i>
                 <span class="ml-4 hidden lg:block">Production</span>
             </a>
-            <a href="public/?page=sales" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-lime-400 transition-colors">
+            <a href="?page=sales" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-lime-400 transition-colors">
                 <i data-feather="settings" class="w-5 h-5"></i>
                 <span class="ml-4 hidden lg:block">Sales</span>
             </a>
-            <a href="public/?page=notifications" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-lime-400 transition-colors">
+            <a href="?page=notifications" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-lime-400 transition-colors">
                 <i data-feather="settings" class="w-5 h-5"></i>
                 <span class="ml-4 hidden lg:block">Notifications</span>
+            </a>
+            <?php if($user): ?>
+            <?php else: ?>
+            <a href="?page=login" class="flex items-center px-4 py-3 text-blue-500 hover:bg-gray-700 hover:text-blue-400 transition-colors">
+                <i data-feather="log-in" class="w-5 h-5"></i>
+                <span class="ml-4 hidden lg:block">Login</span>
+            </a>
+            <?php endif; ?>
+            <a href="?page=logout" class="flex items-center px-4 py-3 text-red-500 hover:bg-gray-700 hover:text-red-400 transition-colors mt-8">
+                <i data-feather="log-out" class="w-5 h-5"></i>
+                <span class="ml-4 hidden lg:block">Logout</span>
             </a>
         </nav>
     </div>

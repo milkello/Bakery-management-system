@@ -7,4 +7,6 @@ $allowed = ['home','login','logout','dashboard','employees','employee_create','r
 if (!in_array($page,$allowed)) $page = 'home';
 include __DIR__ . '/../app/views/header.php';
 include __DIR__ . '/../app/controllers/' . $page . '.php';
-include __DIR__ . '/../app/views/footer.php';
+// include __DIR__ . '/../app/views/footer.php';
+
+ob_end_flush();
