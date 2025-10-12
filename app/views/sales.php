@@ -88,7 +88,7 @@
                                 <td class="p-2">
                                     <?= htmlspecialchars($sale['product_code'] ?? '') ?> — <?= htmlspecialchars($sale['product_name']) ?>
                                 </td>
-                                <td class="p-2"><?= htmlspecialchars($sale['quantity_sold']) ?></td>
+                                <td class="p-2"><?= htmlspecialchars($sale['qty']) ?></td>
                                 <td class="p-2"><?= number_format($sale['unit_price'], 2) ?></td>
                                 <td class="p-2 font-semibold text-green-600">
                                     <?= number_format($sale['total_price'], 2) ?>

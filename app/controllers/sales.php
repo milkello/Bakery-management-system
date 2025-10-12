@@ -39,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['product_id'], $_POST[
 
         // Insert sale
         $stmtSale = $conn->prepare("
-            INSERT INTO sales (product_id, quantity_sold, unit_price, total_price, customer_type, payment_method, sold_by)
+            INSERT INTO sales (product_id, qty, unit_price, total_price, customer_type, payment_method, sold_by)
             VALUES (?,?,?,?,?,?,?)
         ");
         $stmtSale->execute([
