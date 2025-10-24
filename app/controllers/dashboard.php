@@ -1,4 +1,5 @@
 <?php
+if (!isset($_SESSION['user_id'])) { header('Location: ?page=login'); exit; }
 require_once __DIR__ . '/../../config/config.php';
 
 // === Basic Stats ===
@@ -177,6 +178,8 @@ $iconMap = [
 
 // === Low Stock Items ===
 $low_stock = $conn->query("SELECT name, stock FROM products WHERE stock < 10")->fetchAll();
+$low_stock_count = $pdo->query('SELECT COUNT(*) FROM raw_materials WHERE stock_quantity <= low_threshold')->fetchColumn();
+$today_production = $conn->query("SELECT COUNT(*) FROM production WHERE DATE(created_at) = CURDATE()")->fetchColumn();
 
 // === Sales Trend (last 7 days) ===
 $sales_trend_stmt = $conn->query("

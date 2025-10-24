@@ -1,4 +1,5 @@
 <?php
+if (!isset($_SESSION['user_id'])) { header('Location: ?page=login'); exit; }
 require_once __DIR__ . '/../../config/config.php';
 
 // Fetch all products for dropdown
@@ -57,7 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['product_id'], $_POST[
         $stmtNotif->execute(['sale', "Sold $quantity_sold units of Product ID $product_id successfully."]);
     }
 
-    header("Location: index.php?page=sales");
+    header("Location: ?page=sales");
     exit;
 }
 
@@ -69,6 +70,12 @@ $sales_logs = $conn->query("
     LEFT JOIN users u ON s.sold_by = u.id
     ORDER BY s.id DESC
 ")->fetchAll(PDO::FETCH_ASSOC);
+
+// Calculate statistics
+$total_sales = $conn->query("SELECT COUNT(*) FROM sales")->fetchColumn();
+$total_revenue = $conn->query("SELECT SUM(total_price) FROM sales")->fetchColumn();
+$today_revenue = $conn->query("SELECT SUM(total_price) FROM sales WHERE DATE(created_at) = CURDATE()")->fetchColumn();
+$avg_sale_value = $conn->query("SELECT AVG(total_price) FROM sales")->fetchColumn();
 
 // Pass data to view
 include __DIR__ . '/../views/sales.php';

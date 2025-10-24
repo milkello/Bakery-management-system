@@ -1,4 +1,5 @@
 <?php
+if (!isset($_SESSION['user_id'])) { header('Location: ?page=login'); exit; }
 require_once __DIR__ . '/../../config/config.php';
 
 // Ensure database connection exists
@@ -10,7 +11,7 @@ if (!isset($conn) || !$conn) {
 $products = $conn->query("SELECT * FROM products")->fetchAll(PDO::FETCH_ASSOC);
 $materials = $conn->query("SELECT * FROM raw_materials")->fetchAll(PDO::FETCH_ASSOC);
 
-// Add recipe
+// Handle Add Recipe
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['product_id'])) {
     $product_id = $_POST['product_id'];
     $material_ids = $_POST['materials'] ?? [];
@@ -31,7 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['product_id'])) {
             }
         }
 
-        header("Location: index.php?page=recipes");
+        header("Location: ?page=recipes");
         exit;
 
     } catch (PDOException $e) {
@@ -39,15 +40,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['product_id'])) {
     }
 }
 
-// Fetch all recipes with ingredients
+// Handle Delete Recipe
+if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])) {
+    try {
+        // Delete ingredients first
+        $stmt = $conn->prepare("DELETE FROM recipe_ingredients WHERE recipe_id = ?");
+        $stmt->execute([$_GET['id']]);
+        
+        // Then delete recipe
+        $stmt = $conn->prepare("DELETE FROM recipes WHERE id = ?");
+        $stmt->execute([$_GET['id']]);
+        
+        header("Location: ?page=recipes");
+        exit;
+    } catch (PDOException $e) {
+        die("Error deleting recipe: " . $e->getMessage());
+    }
+}
+
+// Fetch all recipes with ingredients grouped by recipe
 $recipes = $conn->query("
-    SELECT r.id AS recipe_id, p.name AS product_name, ri.quantity, ri.unit, m.name AS material_name
+    SELECT r.id AS recipe_id, p.name AS product_name, p.id AS product_id
     FROM recipes r
     JOIN products p ON r.product_id = p.id
-    JOIN recipe_ingredients ri ON ri.recipe_id = r.id
-    JOIN raw_materials m ON ri.material_id = m.id
     ORDER BY r.id DESC
 ")->fetchAll(PDO::FETCH_ASSOC);
+
+// Get ingredients for each recipe
+foreach ($recipes as &$recipe) {
+    $stmt = $conn->prepare("
+        SELECT ri.quantity, ri.unit, m.name AS material_name, m.id AS material_id
+        FROM recipe_ingredients ri
+        JOIN raw_materials m ON ri.material_id = m.id
+        WHERE ri.recipe_id = ?
+    ");
+    $stmt->execute([$recipe['recipe_id']]);
+    $recipe['ingredients'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+// Calculate statistics
+$total_recipes = count($recipes);
+$total_products_with_recipes = $conn->query("SELECT COUNT(DISTINCT product_id) FROM recipes")->fetchColumn();
+$avg_ingredients_per_recipe = $conn->query("
+    SELECT AVG(ingredient_count) FROM (
+        SELECT COUNT(*) as ingredient_count FROM recipe_ingredients GROUP BY recipe_id
+    ) as counts
+")->fetchColumn();
 
 // Pass data to view
 include __DIR__ . '/../views/recipes.php';
