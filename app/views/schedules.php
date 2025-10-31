@@ -290,10 +290,13 @@
     <!-- Time Off Requests -->
     <div class="bg-gray-800 rounded-xl p-6">
         <h4 class="text-lg font-bold text-fuchsia-400 mb-4">Time Off Requests</h4>
+            <div class="float-right">
+                <button id="showAllTimeOffBtn" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded text-sm">Show All</button>
+            </div>
         <div class="space-y-3">
             <?php if (!empty($time_off_requests)): ?>
                 <?php foreach ($time_off_requests as $request): ?>
-                    <div class="flex justify-between items-center p-2 bg-gray-700 rounded">
+                    <div class="flex justify-between items-center p-2 bg-gray-700 rounded" data-request-id="<?= $request['id'] ?>">
                         <div>
                             <p class="font-medium">
                                 <?= htmlspecialchars($request['first_name'] . ' ' . $request['last_name']) ?>
@@ -304,14 +307,28 @@
                                     - <?= date('j', strtotime($request['end_date'])) ?>
                                 <?php endif; ?>
                             </p>
+                            <?php if (!empty($request['reason'])): ?>
+                                <p class="text-gray-400 text-xs mt-1">"<?= htmlspecialchars($request['reason']) ?>"</p>
+                            <?php endif; ?>
                         </div>
-                        <?php
-                        $status_color = $request['status'] == 'approved' ? 'bg-green-500' : 'bg-yellow-500';
-                        $status_text = ucfirst($request['status']);
-                        ?>
-                        <span class="<?= $status_color ?> text-white px-2 py-1 rounded text-sm">
-                            <?= $status_text ?>
-                        </span>
+                        <div class="flex items-center space-x-2">
+                            <?php
+                            $status_color = $request['status'] == 'approved' ? 'bg-green-500' : ($request['status'] == 'rejected' ? 'bg-red-500' : 'bg-yellow-500');
+                            $status_text = ucfirst($request['status']);
+                            ?>
+                            <span class="<?= $status_color ?> text-white px-2 py-1 rounded text-sm">
+                                <?= $status_text ?>
+                            </span>
+
+                            <?php if ($request['status'] === 'pending'): ?>
+                                <button class="approveTimeOffBtn text-green-300 hover:text-green-200" title="Approve" data-id="<?= $request['id'] ?>">
+                                    <i data-feather="check" class="w-4 h-4"></i>
+                                </button>
+                                <button class="rejectTimeOffBtn text-red-300 hover:text-red-200" title="Reject" data-id="<?= $request['id'] ?>">
+                                    <i data-feather="x" class="w-4 h-4"></i>
+                                </button>
+                            <?php endif; ?>
+                        </div>
                     </div>
                 <?php endforeach; ?>
             <?php else: ?>
@@ -324,13 +341,21 @@
     <div class="bg-gray-800 rounded-xl p-6">
         <h4 class="text-lg font-bold text-lime-400 mb-4">Quick Actions</h4>
         <div class="space-y-2">
-            <button class="w-full bg-lime-500 hover:bg-lime-600 text-white px-4 py-2 rounded-lg text-left flex items-center space-x-2 transition-colors">
+            <button id="copyLastWeekBtn" class="w-full bg-lime-500 hover:bg-lime-600 text-white px-4 py-2 rounded-lg text-left flex items-center space-x-2 transition-colors">
                 <i data-feather="rotate-cw" class="w-4 h-4"></i>
                 <span>Copy Last Week</span>
             </button>
-            <button class="w-full bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg text-left flex items-center space-x-2 transition-colors">
-                <i data-feather="download" class="w-4 h-4"></i>
-                <span>Export Schedule</span>
+                <button id="exportScheduleBtn" class="w-full bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg text-left flex items-center space-x-2 transition-colors">
+                    <i data-feather="download" class="w-4 h-4"></i>
+                    <span>Export Schedule</span>
+                </button>
+            <button id="requestTimeOffBtn" class="w-full bg-fuchsia-500 hover:bg-fuchsia-600 text-white px-4 py-2 rounded-lg text-left flex items-center space-x-2 transition-colors">
+                <i data-feather="coffee" class="w-4 h-4"></i>
+                <span>Request Time Off</span>
+            </button>
+            <button id="seedTimeOffBtn" class="w-full bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg text-left flex items-center space-x-2 transition-colors">
+                <i data-feather="plus-circle" class="w-4 h-4"></i>
+                <span>Seed Sample Request</span>
             </button>
             <button class="w-full bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg text-left flex items-center space-x-2 transition-colors">
                 <i data-feather="send" class="w-4 h-4"></i>
@@ -340,6 +365,100 @@
     </div>
 </div>
 <?php endif; ?>
+<!-- All Time Off Modal -->
+<div id="allTimeOffModal" class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 hidden">
+    <div class="bg-gray-800 rounded-xl p-6 w-full max-w-2xl mx-4">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-bold text-lime-400">All Time Off Requests</h3>
+            <button id="closeAllTimeOffModal" class="text-gray-400 hover:text-white"><i data-feather="x" class="w-6 h-6"></i></button>
+        </div>
+        <div id="allTimeOffContent" class="space-y-2 max-h-96 overflow-y-auto"></div>
+        <div class="flex justify-end mt-4">
+            <button id="refreshAllTimeOff" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded">Refresh</button>
+        </div>
+    </div>
+</div>
+
+<!-- Time Off Request Modal -->
+<div id="timeOffModal" class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 hidden">
+    <div class="bg-gray-800 rounded-xl p-6 w-full max-w-lg mx-4">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-bold text-lime-400">Request Time Off</h3>
+            <button id="closeTimeOffModal" class="text-gray-400 hover:text-white">
+                <i data-feather="x" class="w-6 h-6"></i>
+            </button>
+        </div>
+
+        <form method="POST" id="timeOffForm" class="space-y-4">
+            <input type="hidden" name="action" value="create_time_off_request">
+            <div>
+                <label class="block text-gray-400 text-sm mb-2">Employee</label>
+                <select name="employee_id" required class="w-full bg-gray-700 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-lime-500">
+                    <option value="">Select Employee</option>
+                    <?php foreach ($employees as $employee): ?>
+                        <option value="<?= $employee['id'] ?>"><?= htmlspecialchars($employee['first_name'] . ' ' . $employee['last_name']) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-gray-400 text-sm mb-2">Start Date</label>
+                    <input type="date" name="start_date" required class="w-full bg-gray-700 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-lime-500">
+                </div>
+                <div>
+                    <label class="block text-gray-400 text-sm mb-2">End Date</label>
+                    <input type="date" name="end_date" required class="w-full bg-gray-700 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-lime-500">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-gray-400 text-sm mb-2">Reason</label>
+                <textarea name="reason" rows="3" class="w-full bg-gray-700 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-lime-500" placeholder="Reason for time off (optional)"></textarea>
+            </div>
+
+            <div class="flex justify-end space-x-3 pt-4 border-t border-gray-700">
+                <button type="button" id="cancelTimeOff" class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-lg">Cancel</button>
+                <button type="submit" class="bg-lime-500 hover:bg-lime-600 text-white px-6 py-2 rounded-lg">Submit Request</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+    <!-- Export Schedule Modal -->
+    <div id="exportScheduleModal" class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 hidden">
+        <div class="bg-gray-800 rounded-xl p-6 w-full max-w-lg mx-4">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-lime-400">Export Schedule</h3>
+                <button id="closeExportModal" class="text-gray-400 hover:text-white">
+                    <i data-feather="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+
+            <form id="exportScheduleForm" class="space-y-4">
+                <div>
+                    <label class="block text-gray-400 text-sm mb-2">Start Date</label>
+                    <input type="date" name="start_date" id="exportStartDate" required class="w-full bg-gray-700 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-lime-500">
+                </div>
+                <div>
+                    <label class="block text-gray-400 text-sm mb-2">End Date</label>
+                    <input type="date" name="end_date" id="exportEndDate" required class="w-full bg-gray-700 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-lime-500">
+                </div>
+                <div>
+                    <label class="block text-gray-400 text-sm mb-2">Options</label>
+                    <div class="flex items-center space-x-3">
+                        <label class="text-gray-400 text-sm"><input type="checkbox" id="includeDescription" checked> Include description</label>
+                        <label class="text-gray-400 text-sm"><input type="checkbox" id="onlyAssigned"> Only assigned</label>
+                    </div>
+                </div>
+
+                <div class="flex justify-end space-x-3 pt-4 border-t border-gray-700">
+                    <button type="button" id="cancelExport" class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-lg">Cancel</button>
+                    <button type="submit" class="bg-lime-500 hover:bg-lime-600 text-white px-6 py-2 rounded-lg">Export PDF</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
 <!-- New Shift Modal -->
 <div id="newShiftModal" class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 hidden">
@@ -421,6 +540,52 @@ function openNewShiftModal(employeeId = '', date = '') {
     modal.classList.remove('hidden');
 }
 
+// Show all time off requests (AJAX) and display in modal
+const showAllBtn = document.getElementById('showAllTimeOffBtn');
+if (showAllBtn) {
+    showAllBtn.addEventListener('click', function() {
+        const sep = window.location.search ? '&' : '?';
+        const url = window.location.pathname + window.location.search + sep + 'ajax=time_off_all';
+        fetch(url, { method: 'GET', headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(r => r.json())
+            .then(resp => {
+                if (!resp.success) {
+                    alert('Failed to load requests');
+                    return;
+                }
+                const container = document.getElementById('allTimeOffContent');
+                container.innerHTML = '';
+                resp.data.forEach(r => {
+                    const el = document.createElement('div');
+                    el.className = 'p-2 bg-gray-700 rounded flex justify-between items-start space-x-4';
+                    const name = (r.first_name || 'Unknown') + (r.last_name ? ' ' + r.last_name : '');
+                    const dates = new Date(r.start_date).toLocaleDateString() + (r.start_date !== r.end_date ? ' - ' + new Date(r.end_date).toLocaleDateString() : '');
+                    el.innerHTML = `<div><div class="font-medium">${escapeHtml(name)}</div><div class="text-gray-400 text-sm">${dates}</div><div class="text-gray-400 text-xs mt-1">${escapeHtml(r.reason || '')}</div></div><div class="text-sm px-2 py-1 bg-gray-600 rounded">${r.status}</div>`;
+                    container.appendChild(el);
+                });
+                document.getElementById('allTimeOffModal').classList.remove('hidden');
+                if (typeof feather !== 'undefined') feather.replace();
+            }).catch(err => { console.error(err); alert('Failed to load requests'); });
+    });
+}
+
+document.getElementById('closeAllTimeOffModal').addEventListener('click', function() {
+    document.getElementById('allTimeOffModal').classList.add('hidden');
+});
+
+document.getElementById('refreshAllTimeOff').addEventListener('click', function() {
+    showAllBtn.click();
+});
+
+function escapeHtml(unsafe) {
+    return String(unsafe)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+}
+
 function closeNewShiftModal() {
     document.getElementById('newShiftModal').classList.add('hidden');
 }
@@ -486,5 +651,181 @@ document.addEventListener("DOMContentLoaded", function() {
     if (typeof feather !== 'undefined') {
         feather.replace();
     }
+});
+// Export modal logic
+document.getElementById('exportScheduleBtn').addEventListener('click', function() {
+    // Prefill dates based on current view range if available from server-side JS vars
+    const modal = document.getElementById('exportScheduleModal');
+    // If PHP provided start_date/end_date variables in scope, they are not directly available here,
+    // so default to today's date and a week range
+    const today = new Date().toISOString().slice(0,10);
+    const nextWeek = new Date(Date.now() + 6*24*60*60*1000).toISOString().slice(0,10);
+    document.getElementById('exportStartDate').value = document.getElementById('exportStartDate').value || today;
+    document.getElementById('exportEndDate').value = document.getElementById('exportEndDate').value || nextWeek;
+    modal.classList.remove('hidden');
+});
+
+document.getElementById('closeExportModal').addEventListener('click', function() {
+    document.getElementById('exportScheduleModal').classList.add('hidden');
+});
+
+document.getElementById('cancelExport').addEventListener('click', function() {
+    document.getElementById('exportScheduleModal').classList.add('hidden');
+});
+
+document.getElementById('exportScheduleForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const start = document.getElementById('exportStartDate').value;
+    const end = document.getElementById('exportEndDate').value;
+    const includeDescription = document.getElementById('includeDescription').checked;
+    const onlyAssigned = document.getElementById('onlyAssigned').checked;
+
+    // Build URL for server export endpoint. Currently server ignores includeDescription/onlyAssigned but we pass them for future.
+    const url = `/bms/bakery-management-system/app/controllers/export_schedule.php?start_date=${encodeURIComponent(start)}&end_date=${encodeURIComponent(end)}&include_description=${includeDescription?1:0}&only_assigned=${onlyAssigned?1:0}&download=0`;
+
+    // Open in new tab to display inline (browser will open PDF); if you want forced download set download=1
+    window.open(url, '_blank');
+    document.getElementById('exportScheduleModal').classList.add('hidden');
+});
+
+// Copy last week logic
+const copyBtn = document.getElementById('copyLastWeekBtn');
+if (copyBtn) {
+    copyBtn.addEventListener('click', function() {
+        if (!confirm('Copy last week\'s schedules into the current week? This will skip duplicates.')) return;
+
+        // Post to same controller with action=copy_last_week
+        const formData = new URLSearchParams();
+        formData.append('action', 'copy_last_week');
+        // include current view/date so server knows which week to target
+        formData.append('view', '<?= $view_type ?>');
+        formData.append('date', '<?= $current_date ?>');
+
+        fetch(window.location.href.split('?')[0] + window.location.search, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: formData.toString()
+        }).then(res => {
+            if (res.redirected) {
+                // if server redirects back we follow
+                window.location.href = res.url;
+                return;
+            }
+            return res.text();
+        }).then(text => {
+            // If server set session message and redirected, page would reload. Otherwise reload to refresh schedule.
+            window.location.reload();
+        }).catch(err => {
+            console.error('Copy last week error', err);
+            alert('Failed to copy last week schedules. See console for details.');
+        });
+    });
+}
+
+// Request Time Off modal wiring
+const requestBtn = document.getElementById('requestTimeOffBtn');
+if (requestBtn) {
+    requestBtn.addEventListener('click', function() {
+        document.getElementById('timeOffModal').classList.remove('hidden');
+    });
+}
+
+document.getElementById('cancelTimeOff').addEventListener('click', function() {
+    document.getElementById('timeOffModal').classList.add('hidden');
+});
+
+document.getElementById('closeTimeOffModal').addEventListener('click', function() {
+    document.getElementById('timeOffModal').classList.add('hidden');
+});
+
+// Close modal when clicking outside
+document.getElementById('timeOffModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        document.getElementById('timeOffModal').classList.add('hidden');
+    }
+});
+
+// AJAX submit for time off form
+document.getElementById('timeOffForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const form = e.target;
+    const data = new URLSearchParams(new FormData(form));
+
+    fetch(window.location.pathname + window.location.search, {
+        method: 'POST',
+        headers: { 'X-Requested-With': 'XMLHttpRequest', 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: data.toString()
+    }).then(r => {
+        const ct = r.headers.get('content-type') || '';
+        if (ct.indexOf('application/json') !== -1) return r.json();
+        return r.text().then(txt => { throw new Error('Non-JSON response: ' + txt); });
+    }).then(resp => {
+        if (resp.success) {
+            // close modal and reload to show updated list
+            document.getElementById('timeOffModal').classList.add('hidden');
+            window.location.reload();
+        } else {
+            alert(resp.message || 'Failed to submit request');
+        }
+    }).catch(err => {
+        console.error(err);
+        alert(err.message || 'Failed to submit request');
+    });
+});
+
+// Approve / Reject handlers (event delegation)
+document.addEventListener('click', function(e) {
+    if (e.target.closest('.approveTimeOffBtn')) {
+        const btn = e.target.closest('.approveTimeOffBtn');
+        const id = btn.getAttribute('data-id');
+        if (!confirm('Approve this time off request?')) return;
+        updateTimeOffStatus(id, 'approved');
+    }
+
+    if (e.target.closest('.rejectTimeOffBtn')) {
+        const btn = e.target.closest('.rejectTimeOffBtn');
+        const id = btn.getAttribute('data-id');
+        if (!confirm('Reject this time off request?')) return;
+        updateTimeOffStatus(id, 'rejected');
+    }
+});
+
+function updateTimeOffStatus(id, status) {
+    const formData = new URLSearchParams();
+    formData.append('action', 'update_time_off_status');
+    formData.append('request_id', id);
+    formData.append('status', status);
+
+    fetch(window.location.pathname + window.location.search, {
+        method: 'POST',
+        headers: { 'X-Requested-With': 'XMLHttpRequest', 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: formData.toString()
+    }).then(r => {
+        const ct = r.headers.get('content-type') || '';
+        if (ct.indexOf('application/json') !== -1) return r.json();
+        return r.text().then(txt => { throw new Error('Non-JSON response: ' + txt); });
+    }).then(resp => {
+        if (resp.success) {
+            window.location.reload();
+        } else {
+            alert(resp.message || 'Failed to update request');
+        }
+    }).catch(err => {
+        console.error(err);
+        alert(err.message || 'Failed to update request');
+    });
+}
+
+// Seed sample request button
+const seedBtn = document.getElementById('seedTimeOffBtn');
+if (seedBtn) seedBtn.addEventListener('click', function() {
+    if (!confirm('Insert a sample time-off request for testing?')) return;
+    const formData = new URLSearchParams();
+    formData.append('action', 'seed_time_off');
+    fetch(window.location.pathname + window.location.search, {
+        method: 'POST',
+        body: formData.toString(),
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+    }).then(() => window.location.reload()).catch(() => window.location.reload());
 });
 </script>

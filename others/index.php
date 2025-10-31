@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DoughLight Delights - Dashboard</title>
+    <title>BMS - Dashboard</title>
     <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -39,7 +39,7 @@
     <div class="sidebar w-20 hover:w-64 bg-gray-800 fixed h-full overflow-hidden transition-all duration-300 z-50">
         <div class="p-4 flex items-center">
             <i data-feather="star" class="text-lime-500 w-8 h-8"></i>
-            <span class="ml-4 text-xl font-bold hidden lg:block">DoughLight 🍪</span>
+            <span class="ml-4 text-xl font-bold hidden lg:block">BMS</span>
         </div>
         <nav class="mt-8">
             <a href="public/?page=dashboard" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-lime-400 transition-colors">

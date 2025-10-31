@@ -35,7 +35,7 @@
                         class="w-full bg-gray-700 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-lime-500">
                     <option value="">-- Choose Product --</option>
                     <?php foreach ($products as $product): ?>
-                        <option value="<?= htmlspecialchars($product['id']) ?>" data-price="<?= htmlspecialchars($product['price'] ?? 0) ?>">
+                        <option value="<?= htmlspecialchars($product['id']) ?>" data-price="<?= htmlspecialchars($product['price'] ?? 0) ?>" data-stock="<?= htmlspecialchars($product['stock'] ?? 0) ?>">
                             <?= htmlspecialchars($product['sku'] ?? 'No Code') ?> — <?= htmlspecialchars($product['name']) ?>
                         </option>
                     <?php endforeach; ?>
@@ -85,12 +85,17 @@
                         <span id="totalAmount" class="text-2xl font-bold text-lime-400">$0.00</span>
                     </div>
                 </div>
+                <!-- Stock availability check -->
+                <div id="stockCheck" class="p-3 rounded-lg hidden">
+                    <div id="stockResult"></div>
+                </div>
                 
-                <button type="submit" 
-                        class="w-full bg-lime-500 hover:bg-lime-600 text-white font-semibold py-3 rounded-lg transition-colors flex items-center justify-center space-x-2">
-                    <i data-feather="credit-card" class="w-5 h-5"></i>
-                    <span>Process Sale</span>
-                </button>
+                <div class="mt-4 grid grid-cols-2 gap-3">
+                    <button type="button" id="payMoMoBtn" 
+                        class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 rounded-lg">Pay with MoMo</button>
+                    <button type="submit" 
+                        class="w-full bg-lime-500 hover:bg-lime-600 text-white font-semibold py-3 rounded-lg">Process Sale</button>
+                </div>
             </div>
         </form>
     </div>
@@ -158,6 +163,30 @@
 </div>
 
 <!-- Sales History -->
+<!-- Sales Report (PDF/CSV) -->
+<div class="mt-6 mb-6 bg-gray-800 rounded-xl p-6 shadow-lg">
+    <h3 class="text-lg font-bold text-lime-400 mb-4">Generate Sales Report</h3>
+    <form method="GET" action="" target="_blank" class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+        <input type="hidden" name="page" value="sales">
+        <input type="hidden" name="action" value="report">
+        <div>
+            <label class="block text-gray-400 text-sm mb-1">Start Date</label>
+            <input type="date" name="start_date" value="<?= date('Y-m-d', strtotime('-6 days')) ?>" required
+                   class="w-full bg-gray-700 text-white px-4 py-2 rounded-lg focus:outline-none">
+        </div>
+        <div>
+            <label class="block text-gray-400 text-sm mb-1">End Date</label>
+            <input type="date" name="end_date" value="<?= date('Y-m-d') ?>" required
+                   class="w-full bg-gray-700 text-white px-4 py-2 rounded-lg focus:outline-none">
+        </div>
+        <div class="flex space-x-2">
+            <button type="submit" name="format" value="pdf" 
+                    class="bg-lime-500 hover:bg-lime-600 text-white font-semibold px-4 py-2 rounded-lg">Download PDF</button>
+            <button type="submit" name="format" value="csv" 
+                    class="bg-fuchsia-500 hover:bg-fuchsia-600 text-white font-semibold px-4 py-2 rounded-lg">Download CSV</button>
+        </div>
+    </form>
+</div>
 <div class="bg-gray-800 rounded-xl p-6 shadow-lg">
     <div class="flex justify-between items-center mb-6">
         <h3 class="text-xl font-bold text-lime-400">Sales History</h3>
@@ -267,11 +296,18 @@ document.addEventListener("DOMContentLoaded", () => {
     const quantityInput = document.querySelector('input[name="quantity"]');
     const unitPriceInput = document.getElementById('unitPrice');
     const totalAmountDisplay = document.getElementById('totalAmount');
+    const stockCheck = document.getElementById('stockCheck');
+    const stockResult = document.getElementById('stockResult');
+    const submitButton = document.querySelector('button[type="submit"]');
+    const originalSubmitClass = submitButton.className;
+    const disabledSubmitClass = 'w-full bg-gray-500 cursor-not-allowed text-white font-semibold py-3 rounded-lg';
     
     // Auto-fill unit price when product is selected
     productSelect.addEventListener('change', function() {
         const selectedOption = this.options[this.selectedIndex];
         const productPrice = selectedOption.getAttribute('data-price');
+        // check stock whenever product changes
+        updateStockCheck();
         
         if (productPrice && productPrice > 0) {
             unitPriceInput.value = parseFloat(productPrice).toFixed(2);
@@ -285,6 +321,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Calculate total when quantity or price changes
     quantityInput.addEventListener('input', calculateTotal);
     unitPriceInput.addEventListener('input', calculateTotal);
+    quantityInput.addEventListener('input', updateStockCheck);
     
     function calculateTotal() {
         const quantity = parseInt(quantityInput.value) || 0;
@@ -292,6 +329,43 @@ document.addEventListener("DOMContentLoaded", () => {
         const total = quantity * unitPrice;
         
         totalAmountDisplay.textContent = `$${total.toFixed(2)}`;
+    }
+
+    function updateStockCheck() {
+        const selectedOption = productSelect.options[productSelect.selectedIndex];
+        if (!selectedOption || !selectedOption.value) {
+            stockCheck.classList.add('hidden');
+            submitButton.disabled = false;
+            submitButton.className = originalSubmitClass;
+            return;
+        }
+
+        const stock = parseInt(selectedOption.getAttribute('data-stock')) || 0;
+        const qty = parseInt(quantityInput.value) || 0;
+
+        if (!qty) {
+            // show available stock
+            stockCheck.className = 'p-3 bg-green-900 border border-green-700 rounded-lg text-green-300';
+            stockResult.innerHTML = `<div><strong>Available:</strong> ${stock} unit(s)</div>`;
+            stockCheck.classList.remove('hidden');
+            submitButton.disabled = false;
+            submitButton.className = originalSubmitClass;
+            return;
+        }
+
+        if (qty > stock) {
+            stockCheck.className = 'p-3 bg-red-900 border border-red-700 rounded-lg text-red-300';
+            stockResult.innerHTML = `<div class="font-semibold">🚫 Insufficient stock</div><div class="text-sm mt-1">Have ${stock} unit(s), requested ${qty} unit(s)</div>`;
+            submitButton.disabled = true;
+            submitButton.className = disabledSubmitClass;
+            stockCheck.classList.remove('hidden');
+        } else {
+            stockCheck.className = 'p-3 bg-green-900 border border-green-700 rounded-lg text-green-300';
+            stockResult.innerHTML = `<div class="font-semibold">✅ Stock available</div><div class="text-sm mt-1">Have ${stock} unit(s), requested ${qty} unit(s)</div>`;
+            submitButton.disabled = false;
+            submitButton.className = originalSubmitClass;
+            stockCheck.classList.remove('hidden');
+        }
     }
     
     // Form validation
@@ -315,8 +389,8 @@ document.addEventListener("DOMContentLoaded", () => {
     productSelect.addEventListener('change', async function() {
         const productId = this.value;
         if (productId) {
-            // You could add AJAX call here to check stock availability
-            // and show warnings if quantity exceeds available stock
+            // update stock check (data-stock is embedded in the option)
+            updateStockCheck();
         }
     });
     
@@ -324,5 +398,127 @@ document.addEventListener("DOMContentLoaded", () => {
     if (typeof feather !== 'undefined') {
         feather.replace();
     }
+});
+</script>
+
+<!-- MoMo Payment Modal (placed after main scripts) -->
+<div id="momoModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black bg-opacity-40">
+  <div class="bg-gray-800 rounded-lg p-6 w-full max-w-md mx-4">
+    <h3 class="text-lg font-bold text-lime-400 mb-4">Pay with MoMo</h3>
+    <div class="space-y-3">
+      <div>
+        <label class="block text-gray-400 text-sm mb-1">Phone (e.g. 2507XXXXXXXX)</label>
+        <input id="momoPhone" type="text" class="w-full bg-gray-700 text-white px-4 py-2 rounded-lg" placeholder="Enter phone number">
+      </div>
+      <div>
+        <label class="block text-gray-400 text-sm mb-1">Amount</label>
+        <div id="momoAmount" class="text-xl font-bold text-lime-400">$0.00</div>
+      </div>
+      <div id="momoStatus" class="text-sm text-gray-300"></div>
+      <div class="flex justify-end space-x-2 mt-4">
+        <button id="momoCancel" type="button" class="px-4 py-2 bg-gray-600 rounded-lg text-white">Cancel</button>
+        <button id="momoConfirm" type="button" class="px-4 py-2 bg-emerald-600 rounded-lg text-white">Send Request</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// MoMo flow: open modal, call momo2/initiate_payment.php, then submit sale form with payment method set to MoMo
+document.addEventListener('DOMContentLoaded', function() {
+    const payBtn = document.getElementById('payMoMoBtn');
+    const momoModal = document.getElementById('momoModal');
+    const momoPhone = document.getElementById('momoPhone');
+    const momoAmount = document.getElementById('momoAmount');
+    const momoStatus = document.getElementById('momoStatus');
+    const momoCancel = document.getElementById('momoCancel');
+    const momoConfirm = document.getElementById('momoConfirm');
+    const totalDisplay = document.getElementById('totalAmount');
+    const salesForm = document.querySelector('form');
+    const paymentSelect = document.querySelector('select[name="payment_method"]');
+
+    function openModal() {
+        // set amount display
+        momoAmount.textContent = totalDisplay.textContent || '$0.00';
+        momoStatus.textContent = '';
+        momoPhone.value = '';
+        momoModal.classList.remove('hidden');
+        momoModal.classList.add('flex');
+    }
+    function closeModal() {
+        momoModal.classList.add('hidden');
+        momoModal.classList.remove('flex');
+    }
+
+    payBtn && payBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        // ensure product and qty selected
+        const productId = document.querySelector('select[name="product_id"]').value;
+        const qty = parseInt(document.querySelector('input[name="quantity"]').value) || 0;
+        if (!productId || qty < 1) {
+            alert('Please select a product and enter quantity before paying.');
+            return;
+        }
+        openModal();
+    });
+
+    momoCancel && momoCancel.addEventListener('click', function() { closeModal(); });
+
+    momoConfirm && momoConfirm.addEventListener('click', async function() {
+        const phone = momoPhone.value.trim();
+        if (!phone) { momoStatus.textContent = 'Please enter phone number.'; return; }
+
+        // amount as number (strip $)
+        const amtText = (totalDisplay.textContent || '$0').replace(/[^0-9\.\-]/g, '');
+        const amount = parseFloat(amtText) || 0;
+        if (amount <= 0) { momoStatus.textContent = 'Invalid amount.'; return; }
+
+        momoStatus.textContent = 'Sending payment request...';
+        momoConfirm.disabled = true;
+
+        try {
+            const resp = await fetch('momo2/initiate_payment.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ phone: phone, amount: String(amount), currency: 'XAF', externalId: '' })
+            });
+            const data = await resp.json();
+
+            // success if accepted or mock
+            if (data.status === 'accepted' || data.status === 'mock' || data.status === 'accepted') {
+                momoStatus.textContent = 'Payment request sent. Recording sale...';
+                // set payment method to MoMo and add hidden payment_reference then submit the form
+                if (paymentSelect) paymentSelect.value = 'MoMo';
+                // add hidden inputs
+                let refInput = document.querySelector('input[name="payment_reference"]');
+                if (!refInput) {
+                    refInput = document.createElement('input');
+                    refInput.type = 'hidden';
+                    refInput.name = 'payment_reference';
+                    salesForm.appendChild(refInput);
+                }
+                refInput.value = data.reference || data.referenceId || data.reference_id || '';
+
+                // optionally include payer phone
+                let phoneInput = document.querySelector('input[name="payer_phone"]');
+                if (!phoneInput) {
+                    phoneInput = document.createElement('input');
+                    phoneInput.type = 'hidden';
+                    phoneInput.name = 'payer_phone';
+                    salesForm.appendChild(phoneInput);
+                }
+                phoneInput.value = phone;
+
+                // submit the existing sales form to record the sale (will redirect)
+                salesForm.submit();
+            } else {
+                momoStatus.textContent = 'Failed to send payment request: ' + (data.error || JSON.stringify(data));
+                momoConfirm.disabled = false;
+            }
+        } catch (err) {
+            momoStatus.textContent = 'Network error: ' + err.message;
+            momoConfirm.disabled = false;
+        }
+    });
 });
 </script>

@@ -142,3 +142,32 @@ CREATE TABLE IF NOT EXISTS logs (
   meta JSON,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Material orders (records of materials removed from stock for an order/list)
+CREATE TABLE IF NOT EXISTS material_orders (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  order_date DATE NOT NULL,
+  total_value DECIMAL(12,2) DEFAULT 0,
+  note TEXT,
+  created_by INT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS material_order_items (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  order_id INT NOT NULL,
+  material_id INT NOT NULL,
+  qty DECIMAL(12,3) NOT NULL,
+  unit_price DECIMAL(10,4) DEFAULT 0,
+  total_value DECIMAL(12,2) DEFAULT 0
+);
+
+-- Simple production records (user records number of products made)
+CREATE TABLE IF NOT EXISTS production_records (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  product_id INT NOT NULL,
+  quantity INT NOT NULL,
+  created_by INT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  note TEXT
+);

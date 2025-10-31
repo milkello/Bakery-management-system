@@ -1,9 +1,4 @@
-
-
-
-
-
-            <!-- Stats Cards -->
+<!-- Stats Cards -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 <div class="bg-gray-800 rounded-xl p-6 shadow-lg border-l-4 border-lime-500">
                     <div class="flex justify-between items-start">
@@ -19,8 +14,9 @@
                     <div class="flex justify-between items-start">
                         <div>
                             <p class="text-gray-400">Products</p>
-                            <h3 class="text-2xl font-bold text-fuchsia-400"><?= $total_products ?></h3>
-                            <p class="text-green-400 text-sm"><?= number_format($today_production) ?> added today</p>
+                            <h3 class="text-2xl font-bold text-fuchsia-400"><?= $toal_stock ?></h3>
+                            <!-- <h3 class="text-2xl font-bold text-fuchsia-400"><?= $total_products ?></h3> -->
+                            <p class="text-green-400 text-sm"><?= number_format($today_production) ?> products made today</p>
                         </div>
                         <i data-feather="shopping-cart" class="text-fuchsia-500 w-8 h-8"></i>
                     </div>
@@ -28,8 +24,8 @@
                 <div class="bg-gray-800 rounded-xl p-6 shadow-lg border-l-4 border-lime-500">
                     <div class="flex justify-between items-start">
                         <div>
-                            <p class="text-gray-400">Inventory Items</p>
-                            <h3 class="text-2xl font-bold text-lime-400"><?= $toal_stock ?></h3>
+                            <p class="text-gray-400">Ingredients in stock</p>
+                            <h3 class="text-2xl font-bold text-lime-400"><?= $raw_materials ?> types</h3>
                             <p class="text-red-400 text-sm"><?= $low_stock_count ?> low stock</p>
                         </div>
                         <i data-feather="package" class="text-lime-500 w-8 h-8"></i>
@@ -40,11 +36,21 @@
                         <div>
                             <p class="text-gray-400">Employees</p>
                             <h3 class="text-2xl font-bold text-fuchsia-400"><?= $total_employees ?></h3>
-                            <p class="text-green-400 text-sm"><?= $statusMessage ?></p>
+                            <p class="<?= $statusColor ?> text-sm"><?= $statusMessage ?></p>
                         </div>
                         <i data-feather="users" class="text-fuchsia-500 w-8 h-8"></i>
                     </div>
                 </div>
+            </div>
+
+            <!-- Export Business Report -->
+            <div class="mb-6 flex items-center justify-end">
+                <form method="GET" action="" class="flex items-center space-x-2">
+                    <input type="hidden" name="page" value="dashboard">
+                    <input type="hidden" name="action" value="export_report">
+                    <button type="submit" name="format" value="pdf" class="bg-lime-500 hover:bg-lime-600 text-white font-semibold px-3 py-2 rounded-lg">Export PDF</button>
+                    <button type="submit" name="format" value="csv" class="bg-fuchsia-500 hover:bg-fuchsia-600 text-white font-semibold px-3 py-2 rounded-lg">Export CSV</button>
+                </form>
             </div>
 
             <!-- Charts Section -->
@@ -112,8 +118,13 @@
             labels: productLabels,
             datasets: [{
                 data: productSales,
-                backgroundColor: ['#84cc16', '#d946ef', '#3b82f6', '#f59e0b'],
-                borderWidth: 0
+                backgroundColor: ['#83cc16c9', '#d846efd8', '#3b83f6d7', '#f59e0b'],
+                borderWidth: 0,
+                hoverOffset: 30,
+                spacing: 10,
+                cutout: '30%',
+                borderRadius: 5,
+                
             }]
         },
         options: {
@@ -129,7 +140,11 @@
 </script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const ctx = document.getElementById('revenueChart').getContext('2d');
+        // Make the canvas take more vertical space so ticks spread out
+        const revenueCanvas = document.getElementById('revenueChart');
+        revenueCanvas.style.width = '100%';
+        revenueCanvas.style.height = '360px'; // adjust height as needed
+        const ctx = revenueCanvas.getContext('2d');
 
         // All data from PHP
         const allData = {
@@ -141,19 +156,56 @@
 
         // Initial chart (daily)
         let revenueChart = new Chart(ctx, {
-            type: 'bar',
+            type: 'line',
             data: {
                 labels: allData.daily.labels,
                 datasets: [{
                     label: 'Revenue (Frw)',
                     data: allData.daily.data,
-                    backgroundColor: '#84cc16'
+                    // backgroundColor: '#84cc16'
+                    borderColor: '#84cc16',
+                    backgroundColor: 'rgba(132, 204, 22, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 3,
+                    pointBackgroundColor: '#84cc16',
+                    // pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointHoverRadius: 5,
+                    pointHoverBackgroundColor: '#84cc16',
+                    pointHoverBorderColor: '#fff',
+                    pointHoverBorderWidth: 2,
+                    pointHitRadius: 10,
+                    pointStyle: 'circle',
+                    showLine: true,
                 }]
             },
             options: {
                 responsive: true,
+                maintainAspectRatio: true, // allow explicit canvas height
                 plugins: { legend: { display: false } },
-                scales: { y: { beginAtZero: true } }
+                layout: { padding: { top: 12, bottom: 12 } },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                        //reduce line spacing
+                            color: '#9ca3af',
+                            stepSize: 5000,
+
+                            // maxTicksLimit: 6, // fewer ticks => more spacing
+                            // padding: 8
+                        },
+                        grid: {
+                            color: 'rgba(255,255,255,0.06)',
+                            drawBorder: false
+                        }
+                    },
+                    x: {
+                        grid: { display: false }
+                    }
+                }
             }
         });
 

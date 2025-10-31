@@ -30,7 +30,7 @@
     <div class="space-y-6">
         <?php foreach($recipes as $recipe): ?>
         <div class="bg-gray-700 rounded-lg p-4 border border-gray-600">
-            <div class="flex justify-between items-start mb-4">
+        <div class="flex justify-between items-start mb-4">
                 <div class="flex items-center space-x-3">
                     <div class="w-12 h-12 bg-lime-500 rounded-full flex items-center justify-center">
                         <i data-feather="book-open" class="w-6 h-6 text-white"></i>
@@ -96,6 +96,7 @@
         </div>
         
         <form id="recipeForm" method="POST" class="space-y-6">
+            <input type="hidden" name="recipe_id" id="recipe_id">
             <!-- Product Selection -->
             <div>
                 <label class="block text-gray-400 text-sm mb-2">Select Product</label>
@@ -196,6 +197,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById('addRecipeBtn').addEventListener('click', () => {
         modalTitle.textContent = 'Add New Recipe';
         recipeForm.reset();
+        document.getElementById('recipe_id').value = '';
         // Reset to one ingredient row
         ingredientsContainer.innerHTML = createIngredientRow();
         recipeModal.classList.remove('hidden');
@@ -284,6 +286,53 @@ document.addEventListener("DOMContentLoaded", () => {
             button.addEventListener('click', (e) => {
                 const recipeId = e.currentTarget.getAttribute('data-id');
                 showDeleteModal(recipeId);
+            });
+        });
+
+        // Edit buttons
+        document.querySelectorAll('.edit-recipe').forEach(button => {
+            button.addEventListener('click', async (e) => {
+                const id = e.currentTarget.getAttribute('data-id');
+                try {
+                    const res = await fetch(`/bms/bakery-management-system/app/controllers/get_recipe.php?id=${encodeURIComponent(id)}`);
+                    const json = await res.json();
+                    if (!json.success) {
+                        showNotification('Failed to load recipe', 'error');
+                        return;
+                    }
+
+                    const data = json.data;
+                    // Populate modal
+                    modalTitle.textContent = 'Edit Recipe';
+                    document.getElementById('recipe_id').value = data.recipe_id || '';
+                    // set product
+                    const prodSelect = recipeForm.querySelector('select[name="product_id"]');
+                    if (prodSelect) prodSelect.value = data.product_id || '';
+
+                    // Clear ingredients and populate
+                    ingredientsContainer.innerHTML = '';
+                    if (data.ingredients && data.ingredients.length) {
+                        data.ingredients.forEach(ing => {
+                            const rowHtml = createIngredientRow();
+                            ingredientsContainer.insertAdjacentHTML('beforeend', rowHtml);
+                            // set last row values
+                            const lastRow = ingredientsContainer.querySelectorAll('.ingredient-row');
+                            const row = lastRow[lastRow.length - 1];
+                            row.querySelector('select[name="materials[]"]').value = ing.material_id;
+                            row.querySelector('input[name="quantities[]"]').value = ing.quantity;
+                            row.querySelector('input[name="units[]"]').value = ing.unit;
+                        });
+                    } else {
+                        ingredientsContainer.innerHTML = createIngredientRow();
+                    }
+
+                    attachRemoveListeners();
+                    feather.replace();
+                    recipeModal.classList.remove('hidden');
+                } catch (err) {
+                    console.error(err);
+                    showNotification('Error loading recipe', 'error');
+                }
             });
         });
     }

@@ -16,7 +16,7 @@ if (isset($_SESSION['user_id'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DoughLight Delights - Bakery Management System</title>
+    <title>BMS - Bakery Management System</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/feather-icons"></script>
     <style>
@@ -71,7 +71,7 @@ if (isset($_SESSION['user_id'])) {
                     <div class="w-10 h-10 bg-lime-500 rounded-xl flex items-center justify-center">
                         <i data-feather="star" class="w-6 h-6 text-white"></i>
                     </div>
-                    <span class="text-2xl font-bold gradient-text">DoughLight 🍪</span>
+                    <span class="text-2xl font-bold gradient-text">BMS</span>
                 </div>
                 <div class="flex items-center space-x-6">
                     <a href="#features" class="text-gray-300 hover:text-lime-400 transition-colors">Features</a>
@@ -231,7 +231,7 @@ if (isset($_SESSION['user_id'])) {
                     <div class="w-8 h-8 bg-lime-500 rounded-lg flex items-center justify-center">
                         <i data-feather="star" class="w-5 h-5 text-white"></i>
                     </div>
-                    <span class="text-xl font-bold gradient-text">DoughLight 🍪</span>
+                    <span class="text-xl font-bold gradient-text">BMS</span>
                 </div>
                 <div class="flex space-x-6 text-gray-400">
                     <a href="#" class="hover:text-lime-400 transition-colors">Privacy</a>
@@ -239,7 +239,7 @@ if (isset($_SESSION['user_id'])) {
                     <a href="#" class="hover:text-lime-400 transition-colors">Support</a>
                 </div>
                 <div class="text-gray-500 text-sm mt-4 md:mt-0">
-                    &copy; 2024 DoughLight Delights. Baked with ❤️ for bakers worldwide.
+                    &copy; 2024 BMSs. Baked with ❤️ for bakers worldwide.
                 </div>
             </div>
         </div>

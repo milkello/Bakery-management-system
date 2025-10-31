@@ -40,6 +40,7 @@
                     <th class="text-left py-3 px-4 text-lime-400">Employee</th>
                     <th class="text-left py-3 px-4 text-lime-400">Position</th>
                     <th class="text-left py-3 px-4 text-lime-400">Status</th>
+                    <th class="text-left py-3 px-4 text-lime-400">Attendance</th>
                     <th class="text-left py-3 px-4 text-lime-400">Join Date</th>
                     <th class="text-left py-3 px-4 text-lime-400">Actions</th>
                 </tr>
@@ -65,6 +66,22 @@
                         <span class="bg-<?= $statusColor ?>-500 text-white px-2 py-1 rounded-full text-xs">
                             <?= htmlspecialchars($emp['status']) ?>
                         </span>
+                    </td>
+                    <td class="py-3 px-4">
+                        <button 
+                            id="present-<?= $emp['id'] ?>" 
+                            data-id="<?= $emp['id'] ?>" 
+                            data-status="present"
+                            class="attendance-btn bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded mr-2 transition-colors">
+                            Present
+                        </button>
+                        <button 
+                            id="absent-<?= $emp['id'] ?>" 
+                            data-id="<?= $emp['id'] ?>" 
+                            data-status="absent"
+                            class="attendance-btn bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded transition-colors">
+                            Absent
+                        </button>
                     </td>
                     <td class="py-3 px-4"><?= htmlspecialchars($emp['created_at']) ?></td>
                     <td class="py-3 px-4">
@@ -188,9 +205,12 @@
     </div>
 </div>
 
+<!-- Attendance Message -->
+<div id="attendanceMessage" class="fixed top-4 right-4 p-4 rounded-lg text-white z-50 hidden"></div>
+
 <script>
 document.addEventListener("DOMContentLoaded", () => {
-    // Search functionality (your existing code)
+    // Search functionality
     const searchInput = document.getElementById("employeeSearch");
     const tableBody = document.getElementById("employeeTableBody");
     const originalTableHTML = tableBody.innerHTML;
@@ -215,7 +235,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 tableBody.innerHTML = "";
                 
                 if (data.length === 0) {
-                    tableBody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-gray-400">No employees found.</td></tr>`;
+                    tableBody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-gray-400">No employees found.</td></tr>`;
                     return;
                 }
                 
@@ -240,6 +260,22 @@ document.addEventListener("DOMContentLoaded", () => {
                             <td class="py-3 px-4">
                                 <span class="bg-${statusColor}-500 text-white px-2 py-1 rounded-full text-xs">${emp.status || 'Unknown'}</span>
                             </td>
+                            <td class="py-3 px-4">
+                                <button 
+                                    id="present-${emp.id}" 
+                                    data-id="${emp.id}" 
+                                    data-status="present"
+                                    class="attendance-btn bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded mr-2 transition-colors">
+                                    Present
+                                </button>
+                                <button 
+                                    id="absent-${emp.id}" 
+                                    data-id="${emp.id}" 
+                                    data-status="absent"
+                                    class="attendance-btn bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded transition-colors">
+                                    Absent
+                                </button>
+                            </td>
                             <td class="py-3 px-4">${joinDate}</td>
                             <td class="py-3 px-4">
                                 <div class="flex space-x-2">
@@ -258,9 +294,17 @@ document.addEventListener("DOMContentLoaded", () => {
                 
                 feather.replace();
                 attachEventListeners();
+
+                // Update attendance button states for the newly rendered rows
+                try {
+                    const ids = data.map(d => d.id);
+                    updateAttendanceButtonsForIds(ids);
+                } catch (e) {
+                    // ignore
+                }
             } catch (error) {
                 console.error('Search error:', error);
-                tableBody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-red-400">Search failed: ${error.message}</td></tr>`;
+                tableBody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-red-400">Search failed: ${error.message}</td></tr>`;
             }
         }, 300);
     });
@@ -293,6 +337,152 @@ document.addEventListener("DOMContentLoaded", () => {
         deleteModal.classList.add('hidden');
     });
 
+    // Attendance function
+    async function handleAttendance(employeeId, status) {
+        const msg = document.getElementById('attendanceMessage');
+        
+        try {
+            const formData = new FormData();
+            formData.append('employee_id', employeeId);
+            formData.append('status', status);
+
+            const res = await fetch('/bms/bakery-management-system/app/controllers/mark_attendance.php', {
+                method: 'POST',
+                body: formData
+            });
+
+            // Check HTTP status first
+            if (!res.ok) {
+                // Try to read response body for details
+                let txt = '';
+                try { txt = await res.text(); } catch (e) { /* ignore */ }
+                console.error('Server returned non-OK status for mark_attendance:', res.status, txt);
+                msg.textContent = 'Server error. See console for details.';
+                msg.className = "fixed top-4 right-4 p-4 rounded-lg text-white z-50 bg-red-500";
+                msg.classList.remove('hidden');
+                return;
+            }
+
+            let data;
+            try {
+                data = await res.json();
+            } catch (e) {
+                // Response was not JSON (likely stray PHP output). Log raw body for debugging.
+                const raw = await res.text();
+                console.error('Failed to parse JSON from mark_attendance.php response:', e, raw);
+                msg.textContent = 'Server returned unexpected response. Check console.';
+                msg.className = "fixed top-4 right-4 p-4 rounded-lg text-white z-50 bg-red-500";
+                msg.classList.remove('hidden');
+                return;
+            }
+
+            if (data && data.success) {
+                msg.textContent = data.message;
+                msg.className = "fixed top-4 right-4 p-4 rounded-lg text-white z-50 bg-green-500";
+                msg.classList.remove('hidden');
+
+                const presentBtn = document.getElementById(`present-${employeeId}`);
+                const absentBtn = document.getElementById(`absent-${employeeId}`);
+
+                // Safely toggle disabled state and visual classes if buttons exist
+                if (status === 'present') {
+                    if (presentBtn) {
+                        presentBtn.disabled = true;
+                        presentBtn.classList.add('opacity-60', 'cursor-not-allowed');
+                    }
+                    if (absentBtn) {
+                        absentBtn.disabled = false;
+                        absentBtn.classList.remove('opacity-60', 'cursor-not-allowed');
+                    }
+                } else {
+                    if (absentBtn) {
+                        absentBtn.disabled = true;
+                        absentBtn.classList.add('opacity-60', 'cursor-not-allowed');
+                    }
+                    if (presentBtn) {
+                        presentBtn.disabled = false;
+                        presentBtn.classList.remove('opacity-60', 'cursor-not-allowed');
+                    }
+                }
+            } else {
+                msg.textContent = data.error || 'Error updating attendance.';
+                msg.className = "fixed top-4 right-4 p-4 rounded-lg text-white z-50 bg-red-500";
+                msg.classList.remove('hidden');
+            }
+        } catch (error) {
+            msg.textContent = "Network or server error.";
+            msg.className = "fixed top-4 right-4 p-4 rounded-lg text-white z-50 bg-red-500";
+            msg.classList.remove('hidden');
+        }
+
+        // Hide message after 3 seconds
+        setTimeout(() => {
+            msg.classList.add('hidden');
+        }, 3000);
+    }
+
+    function attachAttendanceListeners() {
+        document.querySelectorAll('.attendance-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const empId = this.dataset.id;
+                const status = this.dataset.status;
+                handleAttendance(empId, status);
+            });
+        });
+    }
+
+    // Fetch attendance status for a set of employee IDs and update button disabled states
+    async function updateAttendanceButtonsForIds(ids) {
+        if (!ids || ids.length === 0) return;
+
+        try {
+            const query = ids.join(',');
+            const res = await fetch(`/bms/bakery-management-system/app/controllers/get_attendance_status.php?employee_ids=${encodeURIComponent(query)}`);
+            const json = await res.json();
+            if (!json.success) return;
+
+            const map = json.data || {};
+
+            ids.forEach(id => {
+                const presentBtn = document.getElementById(`present-${id}`);
+                const absentBtn = document.getElementById(`absent-${id}`);
+                const status = map[id] || null; // 'present' or 'absent' or null
+
+                if (status === 'present') {
+                    if (presentBtn) {
+                        presentBtn.disabled = true;
+                        presentBtn.classList.add('opacity-60', 'cursor-not-allowed');
+                    }
+                    if (absentBtn) {
+                        absentBtn.disabled = false;
+                        absentBtn.classList.remove('opacity-60', 'cursor-not-allowed');
+                    }
+                } else if (status === 'absent') {
+                    if (absentBtn) {
+                        absentBtn.disabled = true;
+                        absentBtn.classList.add('opacity-60', 'cursor-not-allowed');
+                    }
+                    if (presentBtn) {
+                        presentBtn.disabled = false;
+                        presentBtn.classList.remove('opacity-60', 'cursor-not-allowed');
+                    }
+                } else {
+                    // No attendance yet: enable both
+                    if (presentBtn) {
+                        presentBtn.disabled = false;
+                        presentBtn.classList.remove('opacity-60', 'cursor-not-allowed');
+                    }
+                    if (absentBtn) {
+                        absentBtn.disabled = false;
+                        absentBtn.classList.remove('opacity-60', 'cursor-not-allowed');
+                    }
+                }
+            });
+        } catch (e) {
+            console.error('Failed to load attendance statuses', e);
+        }
+    }
+
     // Attach event listeners to edit and delete buttons
     function attachEventListeners() {
         // Edit buttons
@@ -310,10 +500,23 @@ document.addEventListener("DOMContentLoaded", () => {
                 showDeleteModal(employeeId);
             });
         });
+        
+        // Attendance listeners
+        attachAttendanceListeners();
     }
 
     // Initial attachment
     attachEventListeners();
+
+    // On initial load, collect displayed employee IDs and set button states
+    (function initAttendanceStates() {
+        const ids = Array.from(document.querySelectorAll('tr[data-employee-id]'))
+            .map(tr => tr.getAttribute('data-employee-id'))
+            .filter(Boolean)
+            .map(id => parseInt(id, 10));
+
+        updateAttendanceButtonsForIds(ids);
+    })();
 
     // Edit employee function
     async function editEmployee(id) {

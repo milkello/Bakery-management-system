@@ -168,18 +168,29 @@ class ScheduleManager {
                 return [];
             }
             
+            // Use LEFT JOIN so requests with missing employee rows still surface for debugging
+            // and remove the hard LIMIT so all matching requests are returned for the period.
             $stmt = $this->conn->prepare("
                 SELECT t.*, e.first_name, e.last_name 
                 FROM time_off_requests t
-                JOIN employees e ON t.employee_id = e.id
-                WHERE t.start_date <= ? AND t.end_date >= ?
+                LEFT JOIN employees e ON t.employee_id = e.id
+                --WHERE t.start_date <= ? AND t.end_date >= ?
                 AND t.status IN ('pending', 'approved')
                 ORDER BY t.start_date ASC
-                LIMIT 5
             ");
-            
+
             $stmt->execute([$week_end, $week_start]);
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // If employee name is missing, fill with placeholder for display
+            foreach ($rows as &$r) {
+                if (empty($r['first_name']) && empty($r['last_name'])) {
+                    $r['first_name'] = 'Unknown';
+                    $r['last_name'] = '';
+                }
+            }
+
+            return $rows;
             
         } catch (PDOException $e) {
             error_log("Get time off requests error: " . $e->getMessage());
@@ -341,6 +352,25 @@ if ($view_type === 'week') {
     $end_date = $current_date;
 }
 
+// AJAX: return all time off requests (no date filter) for debugging/listing
+if (isset($_GET['ajax']) && $_GET['ajax'] === 'time_off_all') {
+    try {
+        // Clear output buffers
+        while (ob_get_level()) { ob_end_clean(); }
+        header('Content-Type: application/json');
+
+        $stmt = $conn->prepare("SELECT t.*, e.first_name, e.last_name FROM time_off_requests t LEFT JOIN employees e ON t.employee_id = e.id ORDER BY t.start_date DESC");
+        $stmt->execute();
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        echo json_encode(['success' => true, 'data' => $rows]);
+    } catch (PDOException $e) {
+        while (ob_get_level()) { ob_end_clean(); }
+        header('Content-Type: application/json');
+        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+    }
+    exit;
+}
+
 // Generate week days for week view
 $week_days = [];
 if ($view_type === 'week') {
@@ -379,6 +409,178 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header("Location: ?page=schedules&view=$view_type&date=$current_date");
         exit;
     }
+
+    // Handle creating a time off request
+    if (isset($_POST['action']) && $_POST['action'] === 'create_time_off_request') {
+        $employee_id = $_POST['employee_id'] ?? null;
+        $start_date = $_POST['start_date'] ?? null;
+        $end_date = $_POST['end_date'] ?? null;
+        $reason = $_POST['reason'] ?? null;
+
+        // Basic validation
+        if (!$employee_id || !$start_date || !$end_date) {
+            if (!empty($_SERVER['HTTP_X_REQUESTED_WITH'])) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'message' => 'Please fill all required fields.']);
+                exit;
+            }
+            $_SESSION['error'] = 'Please fill all required fields for time off request.';
+            header("Location: ?page=schedules&view=$view_type&date=$current_date");
+            exit;
+        }
+
+        // Ensure start <= end
+        if (strtotime($start_date) > strtotime($end_date)) {
+            if (!empty($_SERVER['HTTP_X_REQUESTED_WITH'])) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'message' => 'Start date must be before or equal to end date.']);
+                exit;
+            }
+            $_SESSION['error'] = 'Start date must be before or equal to end date.';
+            header("Location: ?page=schedules&view=$view_type&date=$current_date");
+            exit;
+        }
+
+        try {
+            // Check employee exists
+            $empStmt = $conn->prepare("SELECT id, first_name, last_name FROM employees WHERE id = ?");
+            $empStmt->execute([$employee_id]);
+            $emp = $empStmt->fetch(PDO::FETCH_ASSOC);
+            if (!$emp) {
+                if (!empty($_SERVER['HTTP_X_REQUESTED_WITH'])) {
+                    header('Content-Type: application/json');
+                    echo json_encode(['success' => false, 'message' => 'Selected employee not found.']);
+                    exit;
+                }
+                $_SESSION['error'] = 'Selected employee not found.';
+                header("Location: ?page=schedules&view=$view_type&date=$current_date");
+                exit;
+            }
+
+            $insert = $conn->prepare("INSERT INTO time_off_requests (employee_id, start_date, end_date, reason, status, created_at) VALUES (?, ?, ?, ?, 'pending', NOW())");
+            $ok = $insert->execute([$employee_id, $start_date, $end_date, $reason]);
+            $newId = $ok ? $conn->lastInsertId() : null;
+
+            if (!empty($_SERVER['HTTP_X_REQUESTED_WITH'])) {
+                // Clear any output buffers to avoid corrupting JSON
+                while (ob_get_level()) { ob_end_clean(); }
+                header('Content-Type: application/json');
+                if ($ok) {
+                    echo json_encode([
+                        'success' => true,
+                        'message' => 'Time off request submitted.',
+                        'request' => [
+                            'id' => $newId,
+                            'employee_id' => $employee_id,
+                            'first_name' => $emp['first_name'],
+                            'last_name' => $emp['last_name'],
+                            'start_date' => $start_date,
+                            'end_date' => $end_date,
+                            'status' => 'pending',
+                            'reason' => $reason
+                        ]
+                    ]);
+                } else {
+                    echo json_encode(['success' => false, 'message' => 'Failed to submit time off request.']);
+                }
+                exit;
+            }
+
+            if ($ok) {
+                $_SESSION['message'] = 'Time off request submitted.';
+            } else {
+                $_SESSION['error'] = 'Failed to submit time off request.';
+            }
+        } catch (PDOException $e) {
+            error_log('Time off insert error: ' . $e->getMessage());
+            if (!empty($_SERVER['HTTP_X_REQUESTED_WITH'])) {
+                while (ob_get_level()) { ob_end_clean(); }
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'message' => 'Failed to submit time off request.']);
+                exit;
+            }
+            $_SESSION['error'] = 'Failed to submit time off request.';
+        }
+
+        header("Location: ?page=schedules&view=$view_type&date=$current_date");
+        exit;
+    }
+
+    // Handle updating time off request status (approve/reject)
+    if (isset($_POST['action']) && $_POST['action'] === 'update_time_off_status') {
+        $req_id = $_POST['request_id'] ?? null;
+        $new_status = $_POST['status'] ?? null; // expected 'approved' or 'rejected'
+
+        if (!$req_id || !in_array($new_status, ['approved', 'rejected'])) {
+            if (!empty($_SERVER['HTTP_X_REQUESTED_WITH'])) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'message' => 'Invalid request.']);
+                exit;
+            }
+            $_SESSION['error'] = 'Invalid request.';
+            header("Location: ?page=schedules&view=$view_type&date=$current_date");
+            exit;
+        }
+
+        try {
+            $upd = $conn->prepare("UPDATE time_off_requests SET status = ? WHERE id = ?");
+            $ok = $upd->execute([$new_status, $req_id]);
+
+            if (!empty($_SERVER['HTTP_X_REQUESTED_WITH'])) {
+                while (ob_get_level()) { ob_end_clean(); }
+                header('Content-Type: application/json');
+                echo json_encode(['success' => $ok]);
+                exit;
+            }
+
+            if ($ok) {
+                $_SESSION['message'] = 'Time off request updated.';
+            } else {
+                $_SESSION['error'] = 'Failed to update request.';
+            }
+        } catch (PDOException $e) {
+            error_log('Update time off status error: ' . $e->getMessage());
+            if (!empty($_SERVER['HTTP_X_REQUESTED_WITH'])) {
+                while (ob_get_level()) { ob_end_clean(); }
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false]);
+                exit;
+            }
+            $_SESSION['error'] = 'Failed to update request.';
+        }
+
+        header("Location: ?page=schedules&view=$view_type&date=$current_date");
+        exit;
+    }
+
+    // Seed a sample time off request (convenience for testing)
+    if (isset($_POST['action']) && $_POST['action'] === 'seed_time_off') {
+        try {
+            // pick first active employee
+            $emp = $conn->query("SELECT id FROM employees WHERE status = 'Active' LIMIT 1")->fetch(PDO::FETCH_ASSOC);
+            if (!$emp) {
+                $_SESSION['error'] = 'No active employees to seed.';
+                header("Location: ?page=schedules&view=$view_type&date=$current_date");
+                exit;
+            }
+            // pick mid-week dates
+            $seed_start = $week_start;
+            $seed_end = $week_start;
+            $insert = $conn->prepare("INSERT INTO time_off_requests (employee_id, start_date, end_date, reason, status, created_at) VALUES (?, ?, ?, ?, 'pending', NOW())");
+            $ok = $insert->execute([$emp['id'], $seed_start, $seed_end, 'Seed request']);
+            if ($ok) {
+                $_SESSION['message'] = 'Sample time off request added.';
+            } else {
+                $_SESSION['error'] = 'Failed to add sample request.';
+            }
+        } catch (PDOException $e) {
+            error_log('Seed time off error: ' . $e->getMessage());
+            $_SESSION['error'] = 'Failed to add sample request.';
+        }
+
+        header("Location: ?page=schedules&view=$view_type&date=$current_date");
+        exit;
+    }
     
     // Handle status updates
     if (isset($_POST['action']) && $_POST['action'] === 'update_status') {
@@ -404,6 +606,71 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['error'] = "Failed to delete schedule.";
             }
         }
+        header("Location: ?page=schedules&view=$view_type&date=$current_date");
+        exit;
+    }
+
+    // Copy last week schedules into current week
+    if (isset($_POST['action']) && $_POST['action'] === 'copy_last_week') {
+        try {
+            // Determine week ranges relative to the provided date (or current_date)
+            $target_date = $_POST['date'] ?? $current_date;
+            $curr_week_start = date('Y-m-d', strtotime('monday this week', strtotime($target_date)));
+            $curr_week_end = date('Y-m-d', strtotime('sunday this week', strtotime($target_date)));
+            $prev_week_start = date('Y-m-d', strtotime('monday last week', strtotime($target_date)));
+            $prev_week_end = date('Y-m-d', strtotime('sunday last week', strtotime($target_date)));
+
+            // Fetch previous week's schedules
+            $stmt = $conn->prepare("SELECT * FROM schedules WHERE DATE(start_time) BETWEEN ? AND ? ORDER BY start_time ASC");
+            $stmt->execute([$prev_week_start, $prev_week_end]);
+            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            $copied = 0;
+
+            foreach ($rows as $row) {
+                // Compute day offset from prev week start
+                $orig_date = date('Y-m-d', strtotime($row['start_time']));
+                $offset_days = (int)( (strtotime($orig_date) - strtotime($prev_week_start)) / 86400 );
+                $new_date = date('Y-m-d', strtotime($curr_week_start . " +{$offset_days} days"));
+
+                $time_start = date('H:i:s', strtotime($row['start_time']));
+                $time_end = date('H:i:s', strtotime($row['end_time']));
+
+                $new_start = $new_date . ' ' . $time_start;
+                $new_end = $new_date . ' ' . $time_end;
+
+                // Skip if an identical schedule already exists (same assigned_to & start_time)
+                $checkStmt = $conn->prepare("SELECT COUNT(*) FROM schedules WHERE assigned_to = ? AND start_time = ?");
+                $checkStmt->execute([$row['assigned_to'], $new_start]);
+                if ($checkStmt->fetchColumn() > 0) {
+                    continue;
+                }
+
+                // Prepare data for creation
+                $data = [
+                    'title' => $row['title'],
+                    'description' => $row['description'],
+                    'schedule_type' => $row['schedule_type'],
+                    'start_time' => $new_start,
+                    'end_time' => $new_end,
+                    'assigned_to' => $row['assigned_to'] ?: null,
+                    'status' => 'scheduled', // reset status for new week
+                    'meta' => $row['meta'] ? json_decode($row['meta'], true) : null,
+                    'created_by' => $_SESSION['user_id'] ?? null
+                ];
+
+                $newId = $scheduleManager->createSchedule($data);
+                if ($newId) {
+                    $copied++;
+                }
+            }
+
+            $_SESSION['message'] = "Copied {$copied} schedules from last week.";
+        } catch (Exception $e) {
+            error_log('Copy last week error: ' . $e->getMessage());
+            $_SESSION['error'] = 'Failed to copy last week schedules.';
+        }
+
         header("Location: ?page=schedules&view=$view_type&date=$current_date");
         exit;
     }

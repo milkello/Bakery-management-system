@@ -10,7 +10,7 @@ if ($user):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DoughLight Delights - Dashboard</title>
+    <title>BMS - Dashboard</title>
     <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -76,7 +76,7 @@ if ($user):
         <div class="p-4 flex items-center justify-between">
             <div class="flex items-center min-w-0">
                 <i data-feather="star" class="text-lime-500 w-8 h-8 flex-shrink-0"></i>
-                <span class="logo-text ml-4 text-xl font-bold truncate">DoughLight 🍪</span>
+                <span class="logo-text ml-4 text-xl font-bold truncate">BMS</span>
             </div>
             <button id="sidebarToggle" class="text-gray-400 hover:text-white ml-2 flex-shrink-0">
                 <i data-feather="chevron-left" class="w-5 h-5 sidebar-toggle-icon"></i>
