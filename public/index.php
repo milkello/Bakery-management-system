@@ -9,7 +9,7 @@ if (session_status() === PHP_SESSION_NONE) {
 // Simple router
 $page = $_GET['page'] ?? 'home';
 $allowed = ['home','login','logout','dashboard','employees','employee_create','raw_materials','products',
-            'recipes','production','sales','notifications','profile','change_password','schedules','exports_pdf','reports'];
+            'recipes','production','sales','notifications','profile','change_password','schedules','exports_pdf','reports','material_orders' , 'production_records', 'product_boards'];
 if (!in_array($page,$allowed)) $page = 'home';
 
 // Check if user is logged in
@@ -17,7 +17,7 @@ $logged_in = isset($_SESSION['user_id']);
 
 // Pages that should use the dashboard layout (with sidebar/navbar)
 $dashboard_pages = ['dashboard','employees','employee_create','raw_materials','products',
-                   'recipes','production','sales','notifications','profile','change_password','schedules','logout', 'exports_pdf','reports'];
+                   'recipes','production','sales','notifications','profile','change_password','schedules','logout', 'exports_pdf','reports','material_orders' , 'production_records', 'product_boards'];
 
 // Pages that should use public layout (no sidebar/navbar)
 $public_pages = ['home','login'];

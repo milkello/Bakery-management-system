@@ -99,6 +99,10 @@ if ($user):
                 <i data-feather="package" class="w-5 h-5 flex-shrink-0"></i>
                 <span class="nav-item-text ml-4 truncate">Products</span>
             </a>
+            <a href="?page=product_boards" class="nav-item flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-lime-400 transition-colors <?= $current_page === 'product_boards' ? 'bg-gray-700 text-lime-400' : '' ?>">
+                <i data-feather="grid" class="w-5 h-5 flex-shrink-0"></i>
+                <span class="nav-item-text ml-4 truncate">Product Boards</span>
+            </a>
             <a href="?page=recipes" class="nav-item flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-lime-400 transition-colors <?= $current_page === 'recipes' ? 'bg-gray-700 text-lime-400' : '' ?>">
                 <i data-feather="calendar" class="w-5 h-5 flex-shrink-0"></i>
                 <span class="nav-item-text ml-4 truncate">Recipes</span>

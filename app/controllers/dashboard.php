@@ -46,7 +46,7 @@ require_once __DIR__ . '/../../config/config.php';
 // === Basic Stats ===
 $total_products = $conn->query("SELECT COUNT(*) FROM products")->fetchColumn();
 $total_employees = $conn->query("SELECT COUNT(*) FROM employees")->fetchColumn();
-$total_sales = $conn->query("SELECT SUM(total_price) FROM sales")->fetchColumn() ?? 0;
+$total_sales = $conn->query("SELECT SUM(revenue) FROM product_daily_stats")->fetchColumn() ?? 0;
 $toal_stock = $conn->query("SELECT SUM(stock) FROM products")->fetchColumn() ?? 0;
 
 $today = date('Y-m-d');
@@ -55,12 +55,12 @@ $todayProductsQuery->execute(['today' => $today]);
 $productsToday = $todayProductsQuery->fetch(PDO::FETCH_ASSOC)['added_today'];
 
 $thisMonth = date('Y-m'); // e.g., 2025-10
-$stmt = $conn->prepare("SELECT SUM(total_price) as total FROM sales WHERE DATE_FORMAT(created_at, '%Y-%m') = :month");
+$stmt = $conn->prepare("SELECT SUM(revenue) as total FROM product_daily_stats WHERE DATE_FORMAT(stat_date, '%Y-%m') = :month");
 $stmt->execute(['month' => $thisMonth]);
 $totalThisMonth = $stmt->fetch(PDO::FETCH_ASSOC)['total'] ?? 0;
 
 $lastMonth = date('Y-m', strtotime('-1 month'));
-$stmt = $conn->prepare("SELECT SUM(total_price) as total FROM sales WHERE DATE_FORMAT(created_at, '%Y-%m') = :month");
+$stmt = $conn->prepare("SELECT SUM(revenue) as total FROM product_daily_stats WHERE DATE_FORMAT(stat_date, '%Y-%m') = :month");
 $stmt->execute(['month' => $lastMonth]);
 $totalLastMonth = $stmt->fetch(PDO::FETCH_ASSOC)['total'] ?? 0;
 
@@ -116,20 +116,51 @@ if ($presentToday == $totalEmployees) {
 
 // === Sales by Product ===
 
-$productLabels = [];
-$productSales = [];
-
-$products = $conn->query("SELECT id, name FROM products")->fetchAll(PDO::FETCH_ASSOC);
-
-foreach ($products as $product) {
-    $productLabels[] = $product['name'];
-
-    $stmt = $conn->prepare("SELECT SUM(total_price) as total FROM sales WHERE product_id = :pid");
-    $stmt->execute(['pid' => $product['id']]);
-    $total = $stmt->fetch(PDO::FETCH_ASSOC)['total'] ?? 0;
-
-    $productSales[] = $total;
+// Function to get product sales by time period
+function getProductSalesData($conn, $range) {
+    $labels = [];
+    $sales = [];
+    
+    $products = $conn->query("SELECT id, name FROM products")->fetchAll(PDO::FETCH_ASSOC);
+    
+    foreach ($products as $product) {
+        $labels[] = $product['name'];
+        
+        switch ($range) {
+            case 'daily':
+                $stmt = $conn->prepare("SELECT SUM(revenue) as total FROM product_daily_stats WHERE product_id = :pid AND stat_date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)");
+                break;
+            case 'weekly':
+                $stmt = $conn->prepare("SELECT SUM(revenue) as total FROM product_daily_stats WHERE product_id = :pid AND stat_date >= DATE_SUB(CURDATE(), INTERVAL 6 WEEK)");
+                break;
+            case 'monthly':
+                $stmt = $conn->prepare("SELECT SUM(revenue) as total FROM product_daily_stats WHERE product_id = :pid AND stat_date >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)");
+                break;
+            case 'yearly':
+                $stmt = $conn->prepare("SELECT SUM(revenue) as total FROM product_daily_stats WHERE product_id = :pid AND stat_date >= DATE_SUB(CURDATE(), INTERVAL 6 YEAR)");
+                break;
+            default: // all time
+                $stmt = $conn->prepare("SELECT SUM(revenue) as total FROM product_daily_stats WHERE product_id = :pid");
+                break;
+        }
+        
+        $stmt->execute(['pid' => $product['id']]);
+        $total = $stmt->fetch(PDO::FETCH_ASSOC)['total'] ?? 0;
+        $sales[] = $total;
+    }
+    
+    return ['labels' => $labels, 'sales' => $sales];
 }
+
+// Get product sales for all time periods
+$productSalesDaily = getProductSalesData($conn, 'daily');
+$productSalesWeekly = getProductSalesData($conn, 'weekly');
+$productSalesMonthly = getProductSalesData($conn, 'monthly');
+$productSalesYearly = getProductSalesData($conn, 'yearly');
+
+// Keep original for backward compatibility
+$productLabels = $productSalesMonthly['labels'];
+$productSales = $productSalesMonthly['sales'];
 
 function getRevenueData($conn, $range) {
     $labels = [];
@@ -140,7 +171,7 @@ function getRevenueData($conn, $range) {
             for ($i = 6; $i >= 0; $i--) {
                 $day = date('Y-m-d', strtotime("-$i day"));
                 $labels[] = date('D', strtotime($day));
-                $stmt = $conn->prepare("SELECT SUM(total_price) as total FROM sales WHERE DATE(created_at) = :day");
+                $stmt = $conn->prepare("SELECT SUM(revenue) as total FROM product_daily_stats WHERE stat_date = :day");
                 $stmt->execute(['day' => $day]);
                 $data[] = $stmt->fetch(PDO::FETCH_ASSOC)['total'] ?? 0;
             }
@@ -151,7 +182,7 @@ function getRevenueData($conn, $range) {
                 $start = date('Y-m-d', strtotime("last sunday -$i week"));
                 $end = date('Y-m-d', strtotime("next saturday -$i week"));
                 $labels[] = "Wk ".date('W', strtotime($start));
-                $stmt = $conn->prepare("SELECT SUM(total_price) as total FROM sales WHERE DATE(created_at) BETWEEN :start AND :end");
+                $stmt = $conn->prepare("SELECT SUM(revenue) as total FROM product_daily_stats WHERE stat_date BETWEEN :start AND :end");
                 $stmt->execute(['start' => $start, 'end' => $end]);
                 $data[] = $stmt->fetch(PDO::FETCH_ASSOC)['total'] ?? 0;
             }
@@ -161,7 +192,7 @@ function getRevenueData($conn, $range) {
             for ($i = 5; $i >= 0; $i--) {
                 $month = date('Y-m', strtotime("-$i month"));
                 $labels[] = date('M', strtotime($month.'-01'));
-                $stmt = $conn->prepare("SELECT SUM(total_price) as total FROM sales WHERE DATE_FORMAT(created_at, '%Y-%m') = :month");
+                $stmt = $conn->prepare("SELECT SUM(revenue) as total FROM product_daily_stats WHERE DATE_FORMAT(stat_date, '%Y-%m') = :month");
                 $stmt->execute(['month' => $month]);
                 $data[] = $stmt->fetch(PDO::FETCH_ASSOC)['total'] ?? 0;
             }
@@ -171,7 +202,7 @@ function getRevenueData($conn, $range) {
             for ($i = 5; $i >= 0; $i--) {
                 $year = date('Y', strtotime("-$i year"));
                 $labels[] = $year;
-                $stmt = $conn->prepare("SELECT SUM(total_price) as total FROM sales WHERE DATE_FORMAT(created_at, '%Y') = :year");
+                $stmt = $conn->prepare("SELECT SUM(revenue) as total FROM product_daily_stats WHERE DATE_FORMAT(stat_date, '%Y') = :year");
                 $stmt->execute(['year' => $year]);
                 $data[] = $stmt->fetch(PDO::FETCH_ASSOC)['total'] ?? 0;
             }
@@ -241,16 +272,28 @@ $iconMap = [
 // === Low Stock Items ===
 $low_stock = $conn->query("SELECT name, stock FROM products WHERE stock < 10")->fetchAll();
 $low_stock_count = $pdo->query('SELECT COUNT(*) FROM raw_materials WHERE stock_quantity <= low_threshold')->fetchColumn();
-$today_production = $conn->query("SELECT SUM(quantity_produced) FROM production WHERE DATE(created_at) = CURDATE()")->fetchColumn();
+$today_production = $conn->query("SELECT SUM(produced) FROM product_daily_stats WHERE stat_date = CURDATE()")->fetchColumn();
 //make selection for raw materials in stock currently
 $raw_materials = $conn->query("SELECT COUNT(*) FROM raw_materials WHERE stock_quantity > 0")->fetchColumn();
 
+// New quick metrics: material orders and production records (new tables)
+$today_material_orders = 0;
+$today_materials_value = 0;
+$today_production_records = 0;
+try {
+    $today_material_orders = $conn->query("SELECT COUNT(*) FROM material_orders WHERE DATE(order_date) = CURDATE()")->fetchColumn();
+    $today_materials_value = $conn->query("SELECT SUM(total_value) FROM material_orders WHERE DATE(order_date) = CURDATE()")->fetchColumn() ?: 0;
+    $today_production_records = $conn->query("SELECT SUM(quantity) FROM production_records WHERE DATE(created_at) = CURDATE()")->fetchColumn() ?: 0;
+} catch (Exception $e) {
+    // tables may not exist yet on older installations; ignore errors
+}
+
 // === Sales Trend (last 7 days) ===
 $sales_trend_stmt = $conn->query("
-    SELECT DATE(created_at) AS sale_date, SUM(total_price) AS total
-    FROM sales
-    WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
-    GROUP BY DATE(created_at)
+    SELECT stat_date AS sale_date, SUM(revenue) AS total
+    FROM product_daily_stats
+    WHERE stat_date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+    GROUP BY stat_date
     ORDER BY sale_date ASC
 ");
 $sales_trend = $sales_trend_stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -272,9 +315,9 @@ if (isset($_GET['action']) && $_GET['action'] === 'export_report') {
     $report['totals'] = [
         'total_products' => $total_products ?? $conn->query("SELECT COUNT(*) FROM products")->fetchColumn(),
         'total_employees' => $total_employees ?? $conn->query("SELECT COUNT(*) FROM employees")->fetchColumn(),
-        'total_sales_amount' => $total_sales ?? $conn->query("SELECT SUM(total_price) FROM sales")->fetchColumn(),
+        'total_sales_amount' => $total_sales ?? $conn->query("SELECT SUM(revenue) FROM product_daily_stats")->fetchColumn(),
         'total_stock_units' => $toal_stock ?? $conn->query("SELECT SUM(stock) FROM products")->fetchColumn(),
-        'today_production' => $today_production ?? $conn->query("SELECT SUM(quantity_produced) FROM production WHERE DATE(created_at) = CURDATE()")->fetchColumn(),
+        'today_production' => $today_production ?? $conn->query("SELECT SUM(produced) FROM product_daily_stats WHERE stat_date = CURDATE()")->fetchColumn(),
     ];
 
     // low stock products (threshold 50)
@@ -294,7 +337,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'export_report') {
     $report['notifications'] = $notifications;
 
     // top products by sales
-    $topProducts = $conn->query("SELECT p.id, p.name, SUM(s.qty) as qty_sold, SUM(s.total_price) as revenue FROM sales s JOIN products p ON s.product_id = p.id GROUP BY p.id ORDER BY revenue DESC LIMIT 10")->fetchAll(PDO::FETCH_ASSOC);
+    $topProducts = $conn->query("SELECT p.id, p.name, SUM(pds.sold) as qty_sold, SUM(pds.revenue) as revenue FROM product_daily_stats pds JOIN products p ON pds.product_id = p.id GROUP BY p.id ORDER BY revenue DESC LIMIT 10")->fetchAll(PDO::FETCH_ASSOC);
     $report['top_products'] = $topProducts;
 
     // attendance snapshot (horizontal)

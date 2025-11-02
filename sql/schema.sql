@@ -171,3 +171,25 @@ CREATE TABLE IF NOT EXISTS production_records (
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   note TEXT
 );
+
+-- Map material orders to a product (for per-product boxes/plans)
+CREATE TABLE IF NOT EXISTS product_material_plans (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  product_id INT NOT NULL,
+  order_id INT NOT NULL,
+  plan_date DATE DEFAULT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Per-product daily stats: produced, sold, revenue
+CREATE TABLE IF NOT EXISTS product_daily_stats (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  product_id INT NOT NULL,
+  stat_date DATE NOT NULL,
+  produced INT DEFAULT 0,
+  sold INT DEFAULT 0,
+  revenue DECIMAL(12,2) DEFAULT 0,
+  created_by INT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY product_date_unique (product_id, stat_date)
+);

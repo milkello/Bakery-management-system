@@ -43,6 +43,40 @@
                 </div>
             </div>
 
+            <!-- Quick daily snapshot -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div class="bg-gray-800 rounded-xl p-4 flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-400 text-sm">Today's Material Orders</p>
+                        <h4 class="text-lg font-bold text-lime-400"><?= intval($today_material_orders) ?></h4>
+                        <p class="text-gray-400 text-sm">Value: <?= number_format($today_materials_value,2) ?> Frw</p>
+                    </div>
+                    <div>
+                        <a href="?page=product_boards" class="bg-lime-500 px-3 py-2 rounded text-white">Open</a>
+                    </div>
+                </div>
+                <div class="bg-gray-800 rounded-xl p-4 flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-400 text-sm">Products made today</p>
+                        <h4 class="text-lg font-bold text-fuchsia-400"><?= intval($today_production_records ?: $today_production) ?></h4>
+                        <p class="text-gray-400 text-sm">Recorded production count</p>
+                    </div>
+                    <div>
+                        <a href="?page=production_records" class="bg-fuchsia-500 px-3 py-2 rounded text-white">Open</a>
+                    </div>
+                </div>
+                <div class="bg-gray-800 rounded-xl p-4 flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-400 text-sm">Inventory Value</p>
+                        <h4 class="text-lg font-bold text-lime-400"><?= number_format($pdo->query('SELECT SUM(unit_cost * stock_quantity) FROM raw_materials')->fetchColumn() ?: 0, 2) ?> Frw</h4>
+                        <p class="text-gray-400 text-sm">Materials total value</p>
+                    </div>
+                    <div>
+                        <a href="?page=raw_materials" class="bg-gray-700 px-3 py-2 rounded text-white">Open</a>
+                    </div>
+                </div>
+            </div>
+
             <!-- Export Business Report -->
             <div class="mb-6 flex items-center justify-end">
                 <form method="GET" action="" class="flex items-center space-x-2">
@@ -59,7 +93,7 @@
                     <h3 class="text-xl font-bold mb-4 text-lime-400">Sales Trends</h3>
                     <!-- Buttons -->
                     <div class="flex gap-3 mb-4">
-                        <button data-range="daily" class="range-btn bg-gray-700 px-3 py-1 rounded text-white hover:bg-gray-600">Daily</button>
+                        <button data-range="daily" class="range-btn bg-lime-500 px-3 py-1 rounded text-white hover:bg-lime-600">Daily</button>
                         <button data-range="weekly" class="range-btn bg-gray-700 px-3 py-1 rounded text-white hover:bg-gray-600">Weekly</button>
                         <button data-range="monthly" class="range-btn bg-gray-700 px-3 py-1 rounded text-white hover:bg-gray-600">Monthly</button>
                         <button data-range="yearly" class="range-btn bg-gray-700 px-3 py-1 rounded text-white hover:bg-gray-600">Yearly</button>
@@ -68,6 +102,13 @@
                 </div>
                 <div class="bg-gray-800 rounded-xl p-6 shadow-lg">
                     <h3 class="text-xl font-bold mb-4 text-fuchsia-400">Best Sold</h3>
+                    <!-- Buttons -->
+                    <div class="flex gap-3 mb-4">
+                        <button data-range="daily" class="product-range-btn bg-gray-700 px-3 py-1 rounded text-white hover:bg-gray-600">Daily</button>
+                        <button data-range="weekly" class="product-range-btn bg-gray-700 px-3 py-1 rounded text-white hover:bg-gray-600">Weekly</button>
+                        <button data-range="monthly" class="product-range-btn bg-lime-500 px-3 py-1 rounded text-white hover:bg-lime-600">Monthly</button>
+                        <button data-range="yearly" class="product-range-btn bg-gray-700 px-3 py-1 rounded text-white hover:bg-gray-600">Yearly</button>
+                    </div>
                     <canvas id="salesChart"></canvas>
                 </div>
             </div>
@@ -108,34 +149,61 @@
 
 
 <script>
-    const productLabels = <?= json_encode($productLabels) ?>;
-    const productSales = <?= json_encode($productSales) ?>;
+    document.addEventListener('DOMContentLoaded', function() {
+        // All product sales data from PHP
+        const allProductData = {
+            daily: <?= json_encode($productSalesDaily) ?>,
+            weekly: <?= json_encode($productSalesWeekly) ?>,
+            monthly: <?= json_encode($productSalesMonthly) ?>,
+            yearly: <?= json_encode($productSalesYearly) ?>
+        };
 
-    const salesCtx = document.getElementById('salesChart').getContext('2d');
-    new Chart(salesCtx, {
-        type: 'doughnut',
-        data: {
-            labels: productLabels,
-            datasets: [{
-                data: productSales,
-                backgroundColor: ['#83cc16c9', '#d846efd8', '#3b83f6d7', '#f59e0b'],
-                borderWidth: 0,
-                hoverOffset: 30,
-                spacing: 10,
-                cutout: '30%',
-                borderRadius: 5,
-                
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    position: 'bottom',
-                    labels: { color: '#9ca3af', padding: 20 }
+        // Initial chart (monthly)
+        const salesCtx = document.getElementById('salesChart').getContext('2d');
+        let salesChart = new Chart(salesCtx, {
+            type: 'doughnut',
+            data: {
+                labels: allProductData.monthly.labels,
+                datasets: [{
+                    data: allProductData.monthly.sales,
+                    backgroundColor: ['#83cc16c9', '#d846efd8', '#3b83f6d7', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#f97316'],
+                    borderWidth: 0,
+                    hoverOffset: 30,
+                    spacing: 10,
+                    cutout: '30%',
+                    borderRadius: 5,
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { color: '#9ca3af', padding: 20 }
+                    }
                 }
             }
-        }
+        });
+
+        // Handle product range buttons
+        document.querySelectorAll('.product-range-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                // Remove active state from all buttons
+                document.querySelectorAll('.product-range-btn').forEach(b => {
+                    b.classList.remove('bg-lime-500', 'hover:bg-lime-600');
+                    b.classList.add('bg-gray-700', 'hover:bg-gray-600');
+                });
+                
+                // Add active state to clicked button
+                this.classList.remove('bg-gray-700', 'hover:bg-gray-600');
+                this.classList.add('bg-lime-500', 'hover:bg-lime-600');
+
+                const range = this.dataset.range;
+                salesChart.data.labels = allProductData[range].labels;
+                salesChart.data.datasets[0].data = allProductData[range].sales;
+                salesChart.update();
+            });
+        });
     });
 </script>
 <script>
@@ -212,6 +280,16 @@
         // Handle range buttons
         document.querySelectorAll('.range-btn').forEach(btn => {
             btn.addEventListener('click', function() {
+                // Remove active state from all buttons
+                document.querySelectorAll('.range-btn').forEach(b => {
+                    b.classList.remove('bg-lime-500', 'hover:bg-lime-600');
+                    b.classList.add('bg-gray-700', 'hover:bg-gray-600');
+                });
+                
+                // Add active state to clicked button
+                this.classList.remove('bg-gray-700', 'hover:bg-gray-600');
+                this.classList.add('bg-lime-500', 'hover:bg-lime-600');
+
                 const range = this.dataset.range;
                 revenueChart.data.labels = allData[range].labels;
                 revenueChart.data.datasets[0].data = allData[range].data;
