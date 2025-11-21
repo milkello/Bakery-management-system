@@ -19,8 +19,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             throw new Exception('All required fields must be filled');
         }
         
+        // Create new user
+        $hashed_password = password_hash('emp123', PASSWORD_DEFAULT);
+        $stmtUser = $conn->prepare("INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)");
+        $stmtUser->execute([$first_name . ' ' . $last_name, $email, $hashed_password,$position]);
+        
         $stmt = $conn->prepare("INSERT INTO employees (first_name, last_name, email, phone, position, status, salary_type, salary_amount, created_at) 
                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+
+        
+        // Create notification
+        $stmtNotif = $conn->prepare("INSERT INTO notifications (type, message) VALUES ('employee_added', ?)");
+        $stmtNotif->execute([$first_name . ' ' . $last_name . ' was added as ' . $position]);
+        
         
         $success = $stmt->execute([
             $first_name,

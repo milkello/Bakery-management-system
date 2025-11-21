@@ -41,7 +41,7 @@
                     <th class="text-left py-3 px-4 text-lime-400">Position</th>
                     <th class="text-left py-3 px-4 text-lime-400">Status</th>
                     <th class="text-left py-3 px-4 text-lime-400">Attendance</th>
-                    <th class="text-left py-3 px-4 text-lime-400">Join Date</th>
+                    <th class="text-left py-3 px-4 text-lime-400">Contact</th>
                     <th class="text-left py-3 px-4 text-lime-400">Actions</th>
                 </tr>
             </thead>
@@ -83,7 +83,7 @@
                             Absent
                         </button>
                     </td>
-                    <td class="py-3 px-4"><?= htmlspecialchars($emp['created_at']) ?></td>
+                    <td class="py-3 px-4"><?= htmlspecialchars($emp['phone']) ?></td>
                     <td class="py-3 px-4">
                         <div class="flex space-x-2">
                             <button class="edit-employee text-lime-400 hover:text-lime-300" data-id="<?= $emp['id'] ?>">

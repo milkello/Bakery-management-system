@@ -10,6 +10,7 @@ $message = '';
 $error = '';
 
 // Handle planning ingredients for a product (creates or updates a material_order and links it to product)
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && check_csrf($_POST['csrf'] ?? '')) {
     if (isset($_POST['action']) && $_POST['action'] === 'plan_ingredients') {
         if (!$isAdmin) { $error = 'Only admin can plan ingredients.'; }
@@ -40,49 +41,82 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && check_csrf($_POST['csrf'] ?? '')) {
                 $updateMat = $conn->prepare('UPDATE raw_materials SET stock_quantity = stock_quantity - ? WHERE id = ?');
                 $restoreMat = $conn->prepare('UPDATE raw_materials SET stock_quantity = stock_quantity + ? WHERE id = ?');
 
-                if ($existing) {
-                    // Update existing order: restore previous items then replace
-                    $order_id = $existing['order_id'];
-                    $oldItems = $conn->prepare('SELECT material_id, qty FROM material_order_items WHERE order_id = ?');
-                    $oldItems->execute([$order_id]);
-                    foreach ($oldItems->fetchAll(PDO::FETCH_ASSOC) as $oi) {
-                        $restoreMat->execute([$oi['qty'], $oi['material_id']]);
+                $possible = true;
+                $stmt = $conn->prepare('SELECT stock_quantity FROM raw_materials WHERE id = ?');
+                for ($i = 0; $i < count($material_ids); $i++) {
+                    $m = intval($material_ids[$i]);
+                    $stmt->execute([$m]);
+                    $stock = $stmt->fetchColumn();
+                    if ($stock < $qtys[$i]) {
+                        $possible = false;
+                        break;
                     }
-                    $conn->prepare('DELETE FROM material_order_items WHERE order_id = ?')->execute([$order_id]);
-
-                    for ($i = 0; $i < count($material_ids); $i++) {
-                        $m = intval($material_ids[$i]);
-                        $q = floatval($qtys[$i]);
-                        $p = floatval($unit_prices[$i]);
-                        if ($q <= 0) continue;
-                        $tv = round($q * $p, 2);
-                        $itemStmt->execute([$order_id, $m, $q, $p, $tv]);
-                        $updateMat->execute([$q, $m]);
-                    }
-                    $conn->prepare('UPDATE material_orders SET total_value = ?, note = ? WHERE id = ?')->execute([$total_value, $note, $order_id]);
-                    $message = 'Plan updated.';
-                } else {
-                    $stmt = $conn->prepare('INSERT INTO material_orders (order_date, total_value, note, created_by, created_at) VALUES (?, ?, ?, ?, NOW())');
-                    $stmt->execute([$plan_date, $total_value, $note, $userId]);
-                    $order_id = $conn->lastInsertId();
-
-                    for ($i = 0; $i < count($material_ids); $i++) {
-                        $m = intval($material_ids[$i]);
-                        $q = floatval($qtys[$i]);
-                        $p = floatval($unit_prices[$i]);
-                        if ($q <= 0) continue;
-                        $tv = round($q * $p, 2);
-                        $itemStmt->execute([$order_id, $m, $q, $p, $tv]);
-                        $updateMat->execute([$q, $m]);
-                    }
-
-                    $link = $conn->prepare('INSERT INTO product_material_plans (product_id, order_id, plan_date, created_at) VALUES (?, ?, ?, NOW())');
-                    $link->execute([$product_id, $order_id, $plan_date]);
-                    $message = 'Plan saved.';
                 }
 
-                $conn->commit();
-                header('Location: ?page=product_boards'); exit;
+                if (!$possible) {
+                    $error = 'Impossible action: not enough stock for one of the ingredients.';
+                } else {
+                    if ($existing) {
+                        // Update existing order: restore previous items then replace
+                        $order_id = $existing['order_id'];
+                        $oldItems = $conn->prepare('SELECT material_id, qty FROM material_order_items WHERE order_id = ?');
+                        $oldItems->execute([$order_id]);
+                        foreach ($oldItems->fetchAll(PDO::FETCH_ASSOC) as $oi) {
+                            $restoreMat->execute([$oi['qty'], $oi['material_id']]);
+                        }
+                        $conn->prepare('DELETE FROM material_order_items WHERE order_id = ?')->execute([$order_id]);
+
+                        $stmtNotif = $conn->prepare("INSERT INTO notifications (type, message) VALUES (?, ?)");
+                        $stmtProduct = $conn->prepare("SELECT name, sku FROM products WHERE id=?");
+                        $stmtProduct->execute([$product_id]);
+                        $product = $stmtProduct->fetch(PDO::FETCH_ASSOC);
+                        $name = $product['name'] ?? '';
+                        $sku = $product['sku'] ?? '';
+                        $stmtNotif->execute(['plan_update', "Updated plan for $name ($sku) on $plan_date"]);
+
+                        for ($i = 0; $i < count($material_ids); $i++) {
+                            $m = intval($material_ids[$i]);
+                            $q = floatval($qtys[$i]);
+                            $p = floatval($unit_prices[$i]);
+                            if ($q <= 0) continue;
+                            $tv = round($q * $p, 2);
+                            $itemStmt->execute([$order_id, $m, $q, $p, $tv]);
+                            $updateMat->execute([$q, $m]);
+                        }
+                        $conn->prepare('UPDATE material_orders SET total_value = ?, note = ? WHERE id = ?')->execute([$total_value, $note, $order_id]);
+                        $message = 'Plan updated.';
+                    } else {
+                        $stmt = $conn->prepare('INSERT INTO material_orders (order_date, total_value, note, created_by, created_at) VALUES (?, ?, ?, ?, NOW())');
+                        $stmt->execute([$plan_date, $total_value, $note, $userId]);
+                        $order_id = $conn->lastInsertId();
+
+                        $stmtProduct = $conn->prepare("SELECT name, sku FROM products WHERE id=?");
+                        $stmtProduct->execute([$product_id]);
+                        $product = $stmtProduct->fetch(PDO::FETCH_ASSOC);
+                        $name = $product['name'] ?? '';
+                        $sku = $product['sku'] ?? '';
+                        $stmtNotif = $conn->prepare("INSERT INTO notifications (type, message) VALUES (?, ?)");
+                        $plan_date_formatted = date('d/m/Y', strtotime($plan_date));
+                        $stmtNotif->execute(['plan_update', "Saved plan for $name ($sku) on $plan_date_formatted"]);
+
+                        for ($i = 0; $i < count($material_ids); $i++) {
+                            $m = intval($material_ids[$i]);
+                            $q = floatval($qtys[$i]);
+                            $p = floatval($unit_prices[$i]);
+                            if ($q <= 0) continue;
+                            $tv = round($q * $p, 2);
+                            $itemStmt->execute([$order_id, $m, $q, $p, $tv]);
+                            $updateMat->execute([$q, $m]);
+                        }
+
+                        $link = $conn->prepare('INSERT INTO product_material_plans (product_id, order_id, plan_date, created_at) VALUES (?, ?, ?, NOW())');
+                        $link->execute([$product_id, $order_id, $plan_date]);
+                        $message = 'Plan saved.';
+
+                    }
+                    $conn->commit();
+                    header('Location: ?page=product_boards'); exit;
+                }
             } catch (Exception $e) {
                 $conn->rollBack();
                 $error = 'Error saving plan: ' . $e->getMessage();
@@ -90,59 +124,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && check_csrf($_POST['csrf'] ?? '')) {
         }
     }
 
-    // Handle recording production/sales into product_daily_stats and sales table
-    if (isset($_POST['action']) && $_POST['action'] === 'record_stats') {
-        try {
-            $product_id = intval($_POST['product_id']);
-            $stat_date = $_POST['stat_date'] ?: date('Y-m-d');
-            $produced = intval($_POST['produced'] ?? 0);
-            $sold = intval($_POST['sold'] ?? 0);
-            // Compute revenue server-side from product price for security and consistency
-            $priceStmt = $conn->prepare('SELECT COALESCE(price,0) as price FROM products WHERE id = ? LIMIT 1');
-            $priceStmt->execute([$product_id]);
-            $p = $priceStmt->fetch(PDO::FETCH_ASSOC);
-            $price = $p ? floatval($p['price']) : 0.0;
-            $revenue = round($sold * $price, 2);
-
-            // Upsert stats
-            $upsert = $conn->prepare(
-                "INSERT INTO product_daily_stats (product_id, stat_date, produced, sold, revenue, created_by, created_at)
-                 VALUES (?, ?, ?, ?, ?, ?, NOW())
-                 ON DUPLICATE KEY UPDATE produced = VALUES(produced), sold = VALUES(sold), revenue = VALUES(revenue), created_by = VALUES(created_by), created_at = NOW()"
-            );
-            $upsert->execute([$product_id, $stat_date, $produced, $sold, $revenue, $userId]);
-
-            // update product stock
-            $delta = $produced - $sold;
-            if ($delta != 0) {
-                $conn->prepare('UPDATE products SET stock = COALESCE(stock,0) + ? WHERE id = ?')->execute([$delta, $product_id]);
-            }
-
-            // For sales we update daily stats and produce notifications/logs, but
-            // we avoid inserting a new 'sales' row here to prevent duplicate records.
-            // Dashboard will compute totals from `product_daily_stats`.
-            if ($sold > 0) {
-                $total_price = $revenue;
-                // notification (informational)
-                $notif = $conn->prepare('INSERT INTO notifications (type, message, data, is_read, created_by, created_at) VALUES (?, ?, ?, 0, ?, NOW())');
-                $messageText = "Sold {$sold} units of product_id {$product_id} for {$total_price}";
-                $notif->execute(['sale', $messageText, json_encode(['product_id'=>$product_id,'qty'=>$sold,'total'=>$total_price]), $userId]);
-
-                // log
-                $log = $conn->prepare('INSERT INTO logs (user_id, action, meta, created_at) VALUES (?, ?, ?, NOW())');
-                $log->execute([$userId, 'Product sold', json_encode(['product_id'=>$product_id,'qty'=>$sold,'total'=>$total_price])]);
-            }
-
-            $message = 'Stats recorded.';
-            header('Location: ?page=product_boards'); exit;
-        } catch (Exception $e) {
-            $error = 'Error recording stats: ' . $e->getMessage();
-        }
-    }
+    // Production/Sales are now handled separately:
+    // - Production is recorded via the production page using production table
+    // - Sales are recorded via sales page using sales table
+    // - This page only shows aggregated data from those tables
 }
 
 // Fetch products and today's plans/stats
 $products = $conn->query('SELECT id, name, sku, unit, COALESCE(stock,0) as stock, COALESCE(price,0) as price FROM products ORDER BY name')->fetchAll(PDO::FETCH_ASSOC);
+$total_products = $conn->query("SELECT COUNT(*) FROM products")->fetchColumn();
 
 // For quick display, load today's plans and stats into maps
 $today = date('Y-m-d');
@@ -152,11 +142,56 @@ $plans = $plansStmt->fetchAll(PDO::FETCH_ASSOC);
 $plansByProduct = [];
 foreach ($plans as $p) { $plansByProduct[$p['product_id']][] = $p; }
 
-$statsStmt = $conn->prepare('SELECT * FROM product_daily_stats WHERE stat_date = ?');
-$statsStmt->execute([$today]);
-$stats = $statsStmt->fetchAll(PDO::FETCH_ASSOC);
+// Fetch today's production data from production table
+$productionStmt = $conn->prepare('
+    SELECT product_id, SUM(quantity_produced) as produced
+    FROM production
+    WHERE DATE(created_at) = ?
+    GROUP BY product_id
+');
+$productionStmt->execute([$today]);
+$productionData = $productionStmt->fetchAll(PDO::FETCH_ASSOC);
+$productionByProduct = [];
+foreach ($productionData as $pd) { $productionByProduct[$pd['product_id']] = $pd; }
+
+// Fetch today's sales data from sales table
+$salesStmt = $conn->prepare('
+    SELECT product_id, SUM(qty) as sold, SUM(total_price) as revenue
+    FROM sales
+    WHERE DATE(created_at) = ?
+    GROUP BY product_id
+');
+$salesStmt->execute([$today]);
+$salesData = $salesStmt->fetchAll(PDO::FETCH_ASSOC);
+$salesByProduct = [];
+foreach ($salesData as $sd) { $salesByProduct[$sd['product_id']] = $sd; }
+
+// Combine production and sales data into stats format for display
 $statsByProduct = [];
-foreach ($stats as $s) { $statsByProduct[$s['product_id']] = $s; }
+foreach ($products as $product) {
+    $pid = $product['id'];
+
+    $produced = $productionByProduct[$pid]['produced'] ?? 0;
+
+    $plan_value = 0;
+    if (isset($plansByProduct[$pid])) {
+        foreach ($plansByProduct[$pid] as $planRow) {
+            $plan_value += (float)($planRow['total_value'] ?? 0);
+        }
+    }
+
+    $product_value = ((float)($product['price'] ?? 0)) * ((float)$produced);
+
+    $statsByProduct[$pid] = [
+        'product_id' => $pid,
+        'stat_date' => $today,
+        'produced' => $produced,
+        'sold' => $salesByProduct[$pid]['sold'] ?? 0,
+        'revenue' => $salesByProduct[$pid]['revenue'] ?? 0,
+        'plan_value' => $plan_value,
+        'product_value' => $product_value,
+    ];
+}
 
 include __DIR__ . '/../views/product_boards.php';
 

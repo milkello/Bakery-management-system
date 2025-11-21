@@ -106,7 +106,7 @@ if (isset($_SESSION['user_id'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - BMS</title>
+    <title>Login - <?php echo $conn->query("SELECT business_name FROM system_settings LIMIT 1")->fetchColumn(); ?></title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/feather-icons"></script>
     <style>
@@ -153,7 +153,7 @@ if (isset($_SESSION['user_id'])) {
                 <div class="w-24 h-24 bg-gradient-to-br from-lime-500 to-lime-600 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl">
                     <i data-feather="star" class="w-12 h-12 text-white"></i>
                 </div>
-                <h1 class="text-4xl font-bold text-white mb-3">BMS</h1>
+                <h1 class="text-4xl font-bold text-white mb-3"><?php echo $conn->query("SELECT business_name FROM system_settings LIMIT 1")->fetchColumn(); ?></h1>
                 <p class="text-gray-400 text-lg">Welcome back to your bakery dashboard</p>
             </div>
 
@@ -261,7 +261,7 @@ if (isset($_SESSION['user_id'])) {
 
     <!-- Footer -->
     <!-- <div class="fixed bottom-6 left-0 right-0 text-center text-gray-500 text-sm z-10">
-        &copy; 2024 BMS. All rights reserved.
+        &copy; 2024 <?php echo $conn->query("SELECT business_name FROM system_settings LIMIT 1")->fetchColumn(); ?>. All rights reserved.
     </div> -->
 
     <script>

@@ -10,11 +10,15 @@ if (!class_exists('Dompdf\\Dompdf')) {
 // Fetch all products for dropdown
 $products = $conn->query("SELECT * FROM products")->fetchAll(PDO::FETCH_ASSOC);
 
+// Fetch all customers for dropdown
+$customers = $conn->query("SELECT id, name, customer_type, phone FROM customers ORDER BY name ASC")->fetchAll(PDO::FETCH_ASSOC);
+
 // Handle sale submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['product_id'], $_POST['quantity'], $_POST['unit_price'])) {
     $product_id = intval($_POST['product_id']);
     $quantity_sold = intval($_POST['quantity']);
     $unit_price = floatval($_POST['unit_price']);
+    $customer_id = !empty($_POST['customer_id']) ? intval($_POST['customer_id']) : null;
     $customer_type = $_POST['customer_type'] ?? 'Regular';
     $payment_method = $_POST['payment_method'] ?? 'Cash';
 
@@ -45,8 +49,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['product_id'], $_POST[
 
         // Insert sale
         $stmtSale = $conn->prepare("
-            INSERT INTO sales (product_id, qty, unit_price, total_price, customer_type, payment_method, sold_by)
-            VALUES (?,?,?,?,?,?,?)
+            INSERT INTO sales (product_id, qty, unit_price, total_price, customer_type, payment_method, customer_id, sold_by, created_by)
+            VALUES (?,?,?,?,?,?,?,?,?)
         ");
         $stmtSale->execute([
             $product_id,
@@ -55,12 +59,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['product_id'], $_POST[
             $total_price,
             $customer_type,
             $payment_method,
-            $_SESSION['user']['id'] ?? 1 // Fallback user if not logged in
+            $customer_id,
+            $_SESSION['user_id'] ?? 1,
+            $_SESSION['user_id'] ?? 1
         ]);
 
         // Notify successful sale
         $stmtNotif = $conn->prepare("INSERT INTO notifications (type, message) VALUES (?, ?)");
-        $stmtNotif->execute(['sale', "Sold $quantity_sold units of Product ID $product_id successfully."]);
+        $stmtProduct = $conn->prepare("SELECT name, sku FROM products WHERE id=?");
+        $stmtProduct->execute([$product_id]);
+        $product = $stmtProduct->fetch(PDO::FETCH_ASSOC);
+        $name = $product['name'] ?? '';
+        $sku = $product['sku'] ?? '';
+        $stmtNotif->execute(['sale', "Sold $quantity_sold units of $name ($sku) successfully."]);
 
         // If the sale was paid via MoMo, record payment reference as a notification for tracing
         if (!empty($_POST['payment_reference'])) {
@@ -71,8 +82,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['product_id'], $_POST[
             $stmtNotif->execute(['momo_payment', $msg]);
         }
         // Notify successful sale
-        $stmtNotif = $conn->prepare("INSERT INTO notifications (type, message) VALUES (?, ?)");
-        $stmtNotif->execute(['sale', "Sold $quantity_sold units of Product ID $product_id successfully."]);
+        // $stmtNotif = $conn->prepare("INSERT INTO notifications (type, message) VALUES (?, ?)");
+        // $stmtProduct = $conn->prepare("SELECT name, sku FROM products WHERE id=?");
+        // $stmtProduct->execute([$product_id]);
+        // $product = $stmtProduct->fetch(PDO::FETCH_ASSOC);
+        // $name = $product['name'] ?? '';
+        // $sku = $product['sku'] ?? '';
+        // $stmtNotif->execute(['sale', "Sold $quantity_sold units of $name ($sku) successfully."]);
     }
 
     header("Location: ?page=sales");
@@ -122,8 +138,8 @@ if (isset($_GET['action']) && $_GET['action'] === 'report') {
                 $r['product_name'] ?? '',
                 $r['product_code'] ?? '',
                 $r['qty'] ?? 0,
-                number_format($r['unit_price'] ?? 0, 2),
-                number_format($r['total_price'] ?? 0, 2),
+                number_format($r['unit_price'] ?? 0, 0),
+                number_format($r['total_price'] ?? 0, 0),
                 $r['customer_type'] ?? '',
                 $r['payment_method'] ?? '',
                 $r['sold_by'] ?? '',
@@ -131,7 +147,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'report') {
             ]);
         }
         fputcsv($out, []);
-        fputcsv($out, ['Totals', '', $total_count, '', number_format($total_revenue, 2)]);
+        fputcsv($out, ['Totals', '', $total_count, '', number_format($total_revenue, 0)]);
         fclose($out);
         exit;
     }
@@ -158,8 +174,8 @@ if (isset($_GET['action']) && $_GET['action'] === 'report') {
         $html .= '<td>' . htmlspecialchars($r['product_name'] ?? '') . '</td>';
         $html .= '<td>' . htmlspecialchars($r['product_code'] ?? '') . '</td>';
         $html .= '<td>' . htmlspecialchars($r['qty'] ?? 0) . '</td>';
-        $html .= '<td>$' . number_format($r['unit_price'] ?? 0, 2) . '</td>';
-        $html .= '<td>$' . number_format($r['total_price'] ?? 0, 2) . '</td>';
+        $html .= '<td>$' . number_format($r['unit_price'] ?? 0, 0) . '</td>';
+        $html .= '<td>$' . number_format($r['total_price'] ?? 0, 0) . '</td>';
         $html .= '<td>' . htmlspecialchars($r['customer_type'] ?? '') . '</td>';
         $html .= '<td>' . htmlspecialchars($r['payment_method'] ?? '') . '</td>';
         $html .= '<td>' . htmlspecialchars($r['sold_by'] ?? '') . '</td>';
@@ -167,7 +183,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'report') {
         $html .= '</tr>';
     }
     $html .= '</tbody></table>';
-    $html .= '<p><strong>Total records:</strong> ' . $total_count . ' &nbsp;&nbsp; <strong>Total revenue:</strong> $' . number_format($total_revenue, 2) . '</p>';
+    $html .= '<p><strong>Total records:</strong> ' . $total_count . ' &nbsp;&nbsp; <strong>Total revenue:</strong> $' . number_format($total_revenue, 0) . '</p>';
     $html .= '</body></html>';
 
     $dompdf->loadHtml($html);
@@ -183,7 +199,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'report') {
 
 // Fetch all sales logs
 $sales_logs = $conn->query("
-    SELECT s.*, p.name AS product_name, p.product_code, u.username AS sold_by
+    SELECT s.*, p.name AS product_name, p.sku, u.username AS sold_by
     FROM sales s
     JOIN products p ON s.product_id = p.id
     LEFT JOIN users u ON s.sold_by = u.id

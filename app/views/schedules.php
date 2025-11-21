@@ -345,10 +345,18 @@
                 <i data-feather="rotate-cw" class="w-4 h-4"></i>
                 <span>Copy Last Week</span>
             </button>
-                <button id="exportScheduleBtn" class="w-full bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg text-left flex items-center space-x-2 transition-colors">
-                    <i data-feather="download" class="w-4 h-4"></i>
-                    <span>Export Schedule</span>
+            <form method="POST" class="w-full" onsubmit="return confirm('Auto-generate shifts for this week for all active employees?');">
+                <input type="hidden" name="action" value="auto_generate_week">
+                <input type="hidden" name="date" value="<?= htmlspecialchars($current_date) ?>">
+                <button type="submit" class="w-full bg-lime-500/80 hover:bg-lime-600 text-white px-4 py-2 rounded-lg text-left flex items-center space-x-2 transition-colors">
+                    <i data-feather="calendar" class="w-4 h-4"></i>
+                    <span>Auto-generate Week</span>
                 </button>
+            </form>
+            <button id="exportScheduleBtn" class="w-full bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg text-left flex items-center space-x-2 transition-colors">
+                <i data-feather="download" class="w-4 h-4"></i>
+                <span>Export Schedule</span>
+            </button>
             <button id="requestTimeOffBtn" class="w-full bg-fuchsia-500 hover:bg-fuchsia-600 text-white px-4 py-2 rounded-lg text-left flex items-center space-x-2 transition-colors">
                 <i data-feather="coffee" class="w-4 h-4"></i>
                 <span>Request Time Off</span>

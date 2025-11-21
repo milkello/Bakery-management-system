@@ -1,16 +1,20 @@
 <?php
     ob_start(); 
     $user = $_SESSION['user_id'] ?? null;
+    $user_role = $_SESSION['role'] ?? 'employee';
+    $user_name = $_SESSION['username'] ?? 'User';
     // Get current page for active state
     $current_page = $_GET['page'] ?? 'dashboard';
+    $theme = $_SESSION['theme'] ?? 'dark';
+    $language = $_SESSION['language'] ?? 'en';
 if ($user):
 ?>
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="<?= htmlspecialchars($language) ?>" class="<?= $theme === 'dark' ? 'dark' : '' ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BMS - Dashboard</title>
+    <title><?php echo $conn->query("SELECT business_name FROM system_settings LIMIT 1")->fetchColumn(); ?> - Dashboard</title>
     <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -70,72 +74,97 @@ if ($user):
         }
     </style>
 </head>
-<body class="bg-gray-900 text-white min-h-screen flex">
+<body class="<?= $theme === 'dark' ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-900' ?> min-h-screen flex">
     <!-- Sidebar -->
     <div id="sidebar" class="sidebar sidebar-expanded bg-gray-800 fixed h-full overflow-hidden z-50">
         <div class="p-4 flex items-center justify-between">
             <div class="flex items-center min-w-0">
                 <i data-feather="star" class="text-lime-500 w-8 h-8 flex-shrink-0"></i>
-                <span class="logo-text ml-4 text-xl font-bold truncate">BMS</span>
+                <span class="logo-text ml-4 text-xl font-bold truncate"><?php echo $conn->query("SELECT business_name FROM system_settings LIMIT 1")->fetchColumn(); ?></span>
             </div>
             <button id="sidebarToggle" class="text-gray-400 hover:text-white ml-2 flex-shrink-0">
                 <i data-feather="chevron-left" class="w-5 h-5 sidebar-toggle-icon"></i>
             </button>
         </div>
         <nav class="mt-8">
-            <a href="?page=dashboard" class="nav-item flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-lime-400 transition-colors <?= $current_page === 'dashboard' ? 'bg-gray-700 text-lime-400' : '' ?>">
-                <i data-feather="pie-chart" class="w-5 h-5 flex-shrink-0"></i>
-                <span class="nav-item-text ml-4 truncate">Dashboard</span>
-            </a>
-            <a href="?page=employees" class="nav-item flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-lime-400 transition-colors <?= $current_page === 'employees' ? 'bg-gray-700 text-lime-400' : '' ?>">
-                <i data-feather="users" class="w-5 h-5 flex-shrink-0"></i>
-                <span class="nav-item-text ml-4 truncate">Employees</span>
-            </a>
-            <a href="?page=raw_materials" class="nav-item flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-lime-400 transition-colors <?= $current_page === 'raw_materials' ? 'bg-gray-700 text-lime-400' : '' ?>">
-                <i data-feather="dollar-sign" class="w-5 h-5 flex-shrink-0"></i>
-                <span class="nav-item-text ml-4 truncate">Materials</span>
-            </a>
-            <a href="?page=products" class="nav-item flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-lime-400 transition-colors <?= $current_page === 'products' ? 'bg-gray-700 text-lime-400' : '' ?>">
-                <i data-feather="package" class="w-5 h-5 flex-shrink-0"></i>
-                <span class="nav-item-text ml-4 truncate">Products</span>
-            </a>
-            <a href="?page=product_boards" class="nav-item flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-lime-400 transition-colors <?= $current_page === 'product_boards' ? 'bg-gray-700 text-lime-400' : '' ?>">
-                <i data-feather="grid" class="w-5 h-5 flex-shrink-0"></i>
-                <span class="nav-item-text ml-4 truncate">Product Boards</span>
-            </a>
-            <a href="?page=recipes" class="nav-item flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-lime-400 transition-colors <?= $current_page === 'recipes' ? 'bg-gray-700 text-lime-400' : '' ?>">
-                <i data-feather="calendar" class="w-5 h-5 flex-shrink-0"></i>
-                <span class="nav-item-text ml-4 truncate">Recipes</span>
-            </a>
-            <a href="?page=production" class="nav-item flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-lime-400 transition-colors <?= $current_page === 'production' ? 'bg-gray-700 text-lime-400' : '' ?>">
-                <i data-feather="settings" class="w-5 h-5 flex-shrink-0"></i>
-                <span class="nav-item-text ml-4 truncate">Production</span>
-            </a>
-            <a href="?page=sales" class="nav-item flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-lime-400 transition-colors <?= $current_page === 'sales' ? 'bg-gray-700 text-lime-400' : '' ?>">
-                <i data-feather="trending-up" class="w-5 h-5 flex-shrink-0"></i>
-                <span class="nav-item-text ml-4 truncate">Sales</span>
-            </a>
-            <a href="?page=schedules" class="nav-item flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-lime-400 transition-colors <?= $current_page === 'sales' ? 'bg-gray-700 text-lime-400' : '' ?>">
-                <i data-feather="trending-up" class="w-5 h-5 flex-shrink-0"></i>
-                <span class="nav-item-text ml-4 truncate">Schedules</span>
-            </a>
-            <a href="?page=exports_pdf" class="nav-item flex items-center px-4 py-3 text-blue-500 hover:bg-gray-700 hover:text-blue-400 transition-colors">
-                <i data-feather="log-in" class="w-5 h-5 flex-shrink-0"></i>
-                <span class="nav-item-text ml-4 truncate">Reports in pdf</span>
-            </a>
-            <a href="?page=notifications" class="nav-item flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-lime-400 transition-colors <?= $current_page === 'notifications' ? 'bg-gray-700 text-lime-400' : '' ?>">
-                <i data-feather="bell" class="w-5 h-5 flex-shrink-0"></i>
-                <span class="nav-item-text ml-4 truncate">Notifications</span>
-            </a>
-            <?php if(!$user): ?>
-            <a href="?page=login" class="nav-item flex items-center px-4 py-3 text-blue-500 hover:bg-gray-700 hover:text-blue-400 transition-colors">
-                <i data-feather="log-in" class="w-5 h-5 flex-shrink-0"></i>
-                <span class="nav-item-text ml-4 truncate">Login</span>
-            </a>
+            <?php if ($user_role === 'admin'): ?>
+                <!-- ADMIN PORTAL -->
+                <div class="px-4 py-2 text-xs font-semibold text-lime-400 uppercase tracking-wider">
+                    <span class="nav-item-text"><?= t('dashboard') ?></span>
+                </div>
+                <a href="?page=dashboard" class="nav-item flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-lime-400 transition-colors <?= $current_page === 'dashboard' ? 'bg-gray-700 text-lime-400' : '' ?>">
+                    <i data-feather="pie-chart" class="w-5 h-5 flex-shrink-0"></i>
+                    <span class="nav-item-text ml-4 truncate"><?= t('dashboard') ?></span>
+                </a>
+                <a href="?page=employees" class="nav-item flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-lime-400 transition-colors <?= $current_page === 'employees' ? 'bg-gray-700 text-lime-400' : '' ?>">
+                    <i data-feather="users" class="w-5 h-5 flex-shrink-0"></i>
+                    <span class="nav-item-text ml-4 truncate"><?= t('employees') ?></span>
+                </a>
+                <a href="?page=raw_materials" class="nav-item flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-lime-400 transition-colors <?= $current_page === 'raw_materials' ? 'bg-gray-700 text-lime-400' : '' ?>">
+                    <i data-feather="box" class="w-5 h-5 flex-shrink-0"></i>
+                    <span class="nav-item-text ml-4 truncate"><?= t('raw_materials') ?></span>
+                </a>
+                <a href="?page=products" class="nav-item flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-lime-400 transition-colors <?= $current_page === 'products' ? 'bg-gray-700 text-lime-400' : '' ?>">
+                    <i data-feather="package" class="w-5 h-5 flex-shrink-0"></i>
+                    <span class="nav-item-text ml-4 truncate"><?= t('products') ?></span>
+                </a>
+                <a href="?page=product_boards" class="nav-item flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-lime-400 transition-colors <?= $current_page === 'product_boards' ? 'bg-gray-700 text-lime-400' : '' ?>">
+                    <i data-feather="grid" class="w-5 h-5 flex-shrink-0"></i>
+                    <span class="nav-item-text ml-4 truncate"><?= t('product_boards') ?></span>
+                </a>
+                <a href="?page=sales" class="nav-item flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-fuchsia-400 transition-colors <?= $current_page === 'sales' ? 'bg-gray-700 text-fuchsia-400' : '' ?>">
+                    <i data-feather="shopping-cart" class="w-5 h-5 flex-shrink-0"></i>
+                    <span class="nav-item-text ml-4 truncate"><?= t('sales') ?></span>
+                <a href="?page=schedules" class="nav-item flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-lime-400 transition-colors <?= $current_page === 'schedules' ? 'bg-gray-700 text-lime-400' : '' ?>">
+                    <i data-feather="calendar" class="w-5 h-5 flex-shrink-0"></i>
+                    <span class="nav-item-text ml-4 truncate"><?= t('schedules') ?></span>
+                </a>
+                <a href="?page=customers" class="nav-item flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-lime-400 transition-colors <?= $current_page === 'customers' ? 'bg-gray-700 text-lime-400' : '' ?>">
+                    <i data-feather="users" class="w-5 h-5 flex-shrink-0"></i>
+                    <span class="nav-item-text ml-4 truncate"><?= t('customers') ?></span>
+                </a>
+                <a href="?page=admin_reports" class="nav-item flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-lime-400 transition-colors <?= $current_page === 'admin_reports' ? 'bg-gray-700 text-lime-400' : '' ?>">
+                    <i data-feather="file-text" class="w-5 h-5 flex-shrink-0"></i>
+                    <span class="nav-item-text ml-4 truncate"><?= t('admin_reports') ?></span>
+                </a>
+                <a href="?page=notifications" class="nav-item flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-lime-400 transition-colors <?= $current_page === 'notifications' ? 'bg-gray-700 text-lime-400' : '' ?>">
+                    <i data-feather="bell" class="w-5 h-5 flex-shrink-0"></i>
+                    <span class="nav-item-text ml-4 truncate"><?= t('notifications') ?></span>
+                </a>
+            <?php else: ?>
+                <!-- EMPLOYEE PORTAL -->
+                <div class="px-4 py-2 text-xs font-semibold text-fuchsia-400 uppercase tracking-wider">
+                    <!-- <span class="nav-item-text">Employee Portal</span> -->
+                </div>
+                <a href="?page=product_boards" class="nav-item flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-fuchsia-400 transition-colors <?= $current_page === 'product_boards' ? 'bg-gray-700 text-fuchsia-400' : '' ?>">
+                    <i data-feather="grid" class="w-5 h-5 flex-shrink-0"></i>
+                    <span class="nav-item-text ml-4 truncate"><?= t('product_boards') ?></span>
+                </a>
+                <a href="?page=production" class="nav-item flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-fuchsia-400 transition-colors <?= $current_page === 'production' ? 'bg-gray-700 text-fuchsia-400' : '' ?>">
+                    <i data-feather="settings" class="w-5 h-5 flex-shrink-0"></i>
+                    <span class="nav-item-text ml-4 truncate"><?= t('production') ?></span>
+                </a>
+                <a href="?page=sales" class="nav-item flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-fuchsia-400 transition-colors <?= $current_page === 'sales' ? 'bg-gray-700 text-fuchsia-400' : '' ?>">
+                    <i data-feather="shopping-cart" class="w-5 h-5 flex-shrink-0"></i>
+                    <span class="nav-item-text ml-4 truncate"><?= t('sales') ?></span>
+                </a>
+                <a href="?page=customers" class="nav-item flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-fuchsia-400 transition-colors <?= $current_page === 'customers' ? 'bg-gray-700 text-fuchsia-400' : '' ?>">
+                    <i data-feather="users" class="w-5 h-5 flex-shrink-0"></i>
+                    <span class="nav-item-text ml-4 truncate"><?= t('customers') ?></span>
+                </a>
+                <a href="?page=employee_reports" class="nav-item flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-fuchsia-400 transition-colors <?= $current_page === 'employee_reports' ? 'bg-gray-700 text-fuchsia-400' : '' ?>">
+                    <i data-feather="file-text" class="w-5 h-5 flex-shrink-0"></i>
+                    <span class="nav-item-text ml-4 truncate"><?= t('employee reports') ?></span>
+                </a>
+                <a href="?page=notifications" class="nav-item flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-fuchsia-400 transition-colors <?= $current_page === 'notifications' ? 'bg-gray-700 text-fuchsia-400' : '' ?>">
+                    <i data-feather="bell" class="w-5 h-5 flex-shrink-0"></i>
+                    <span class="nav-item-text ml-4 truncate"><?= t('notifications') ?></span>
+                </a>
             <?php endif; ?>
+            
             <a href="?page=logout" class="nav-item flex items-center px-4 py-3 text-red-500 hover:bg-gray-700 hover:text-red-400 transition-colors mt-8">
                 <i data-feather="log-out" class="w-5 h-5 flex-shrink-0"></i>
-                <span class="nav-item-text ml-4 truncate">Logout</span>
+                <span class="nav-item-text ml-4 truncate"><?= t('logout') ?></span>
             </a>
         </nav>
     </div>
@@ -156,10 +185,15 @@ if ($user):
                     <i data-feather="search" class="absolute right-3 top-2.5 text-gray-400"></i>
                 </div>
                 <div class="flex items-center space-x-2">
-                    <div class="w-10 h-10 bg-lime-500 rounded-full flex items-center justify-center">
-                        <i data-feather="user" class="w-5 h-5 text-white"></i>
+                    <a href="?page=settings">
+                        <div class="w-10 h-10 <?= $user_role === 'admin' ? 'bg-lime-500' : 'bg-fuchsia-500' ?> rounded-full flex items-center justify-center">
+                            <i data-feather="user" class="w-5 h-5 text-white"></i>
+                        </div>
+                    </a>
+                    <div class="hidden sm:block">
+                        <p class="text-white font-semibold text-sm"><?= htmlspecialchars($user_name) ?></p>
+                        <p class="text-gray-400 text-xs capitalize"><?= htmlspecialchars($user_role) ?></p>
                     </div>
-                    <span class="hidden sm:block">Admin</span>
                 </div>
             </div>
         </header>

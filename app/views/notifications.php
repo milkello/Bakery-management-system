@@ -8,7 +8,7 @@
     <div class="bg-gray-800 rounded-xl p-6 text-center">
         <i data-feather="alert-circle" class="w-12 h-12 text-fuchsia-500 mx-auto mb-4"></i>
         <h3 class="text-2xl font-bold text-fuchsia-400"><?= $unread_count ?></h3>
-        <p class="text-gray-400">Unread</p>
+        <p class="text-gray-400"><?= t('Unread') ?></p>
     </div>
     <div class="bg-gray-800 rounded-xl p-6 text-center">
         <i data-feather="calendar" class="w-12 h-12 text-lime-500 mx-auto mb-4"></i>

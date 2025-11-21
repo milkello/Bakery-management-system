@@ -42,7 +42,7 @@ $low_stock_count = $pdo->query('SELECT COUNT(*) FROM raw_materials WHERE stock_q
     </div>
     <div class="bg-gray-800 rounded-xl p-6 text-center">
         <i data-feather="dollar-sign" class="w-12 h-12 text-fuchsia-500 mx-auto mb-4"></i>
-        <h3 class="text-2xl font-bold text-fuchsia-400">$<?= number_format($total_inventory_value, 2) ?></h3>
+        <h3 class="text-2xl font-bold text-fuchsia-400"><?= number_format($total_inventory_value, 0) ?> Rwf</h3>
         <p class="text-gray-400">Inventory Value</p>
     </div>
     <div class="bg-gray-800 rounded-xl p-6 text-center">
@@ -56,10 +56,17 @@ $low_stock_count = $pdo->query('SELECT COUNT(*) FROM raw_materials WHERE stock_q
 <div class="bg-gray-800 rounded-xl p-6 shadow-lg">
     <div class="flex justify-between items-center mb-6">
         <h3 class="text-xl font-bold text-lime-400">Raw Materials List</h3>
-        <button id="addMaterialBtn" class="bg-lime-500 hover:bg-lime-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors">
-            <i data-feather="plus" class="w-4 h-4"></i>
-            <span>Add Material</span>
-        </button>
+        <div class="flex items-center space-x-3">
+            <a href="?page=export_page_pdf&type=raw_materials" target="_blank"
+               class="bg-fuchsia-500 hover:bg-fuchsia-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors">
+                <i data-feather="download" class="w-4 h-4"></i>
+                <span>Export PDF</span>
+            </a>
+            <button id="addMaterialBtn" class="bg-lime-500 hover:bg-lime-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors">
+                <i data-feather="plus" class="w-4 h-4"></i>
+                <span>Add Material</span>
+            </button>
+        </div>
     </div>
     
     <div class="overflow-x-auto">
@@ -102,14 +109,14 @@ $low_stock_count = $pdo->query('SELECT COUNT(*) FROM raw_materials WHERE stock_q
                     <td class="py-3 px-4">
                         <div class="flex flex-col">
                             <span class="font-medium"><?= number_format($m['stock_quantity'], 3) ?></span>
-                            <span class="text-gray-400 text-sm">Threshold: <?= number_format($m['low_threshold'], 3) ?></span>
+                            <span class="text-gray-400 text-sm">Threshold: <?= number_format($m['low_threshold'], 0) ?></span>
                         </div>
                     </td>
                     <td class="py-3 px-4">
-                        <span class="text-fuchsia-400 font-bold">$<?= number_format($m['unit_cost'], 4) ?></span>
+                        <span class="text-fuchsia-400 font-bold"><?= number_format($m['unit_cost'], 0) ?> Rwf</span>
                     </td>
                     <td class="py-3 px-4">
-                        <span class="text-lime-400 font-bold">$<?= number_format($total_value, 2) ?></span>
+                        <span class="text-lime-400 font-bold"><?= number_format($total_value, 0) ?> Rwf</span>
                     </td>
                     <td class="py-3 px-4">
                         <span class="bg-<?= $status_color ?>-500 text-white px-2 py-1 rounded-full text-xs">

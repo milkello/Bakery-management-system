@@ -43,13 +43,13 @@
                         $items->execute([$o['id']]);
                         $it = $items->fetchAll(PDO::FETCH_ASSOC);
                         foreach($it as $ii) {
-                            echo '<div class="text-sm">' . htmlspecialchars($ii['name'] ?? 'Material') . ': ' . number_format($ii['qty'],3) . '</div>';
+                            echo '<div class="text-sm">' . htmlspecialchars($ii['name'] ?? 'Material') . ': ' . number_format($ii['qty'],0) . '</div>';
                         }
                         ?>
-                    </td>
-                    <td class="py-3 px-4">$<?= number_format($o['total_value'], 2) ?></td>
-                    <td class="py-3 px-4"><?= htmlspecialchars($o['created_by']) ?></td>
-                    <td class="py-3 px-4">
+                        </td>
+                        <td class="py-3 px-4"><?= number_format($o['total_value'],0) ?> Rwf</td>
+                        <td class="py-3 px-4"><?= htmlspecialchars($o['created_by']) ?></td>
+                        <td class="py-3 px-4">
                         <?php if($isAdmin): ?>
                         <a href="?page=material_orders&action=delete&id=<?= $o['id'] ?>" class="text-fuchsia-400 hover:text-fuchsia-300">Delete</a>
                         <?php endif; ?>

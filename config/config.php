@@ -30,6 +30,9 @@ function check_csrf($token) {
   return hash_equals($_SESSION['csrf'] ?? '', $token ?? '');
 }
 
+// Load translation helper
+require_once __DIR__ . '/../app/helpers/i18n.php';
+
 try {
     $conn = new PDO(
         "mysql:host=" . $_ENV['DB_HOST'] . ";dbname=" . $_ENV['DB_NAME'],
@@ -39,5 +42,32 @@ try {
     $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 } catch (PDOException $e) {
     die("Database connection failed: " . $e->getMessage());
+}
+
+// Load user theme and language preferences into session if logged in
+if (isset($_SESSION['user_id'])) {
+    try {
+        $prefStmt = $conn->prepare("SELECT theme, language FROM user_preferences WHERE user_id = ? LIMIT 1");
+        $prefStmt->execute([$_SESSION['user_id']]);
+        $prefs = $prefStmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($prefs) {
+            $_SESSION['theme'] = $prefs['theme'] ?? 'dark';
+            $_SESSION['language'] = $prefs['language'] ?? 'rw';
+        } else {
+            $_SESSION['theme'] = $_SESSION['theme'] ?? 'dark';
+            $_SESSION['language'] = $_SESSION['language'] ?? 'rw';
+        }
+    } catch (Exception $e) {
+        if (!isset($_SESSION['theme'])) {
+            $_SESSION['theme'] = 'dark';
+        }
+        if (!isset($_SESSION['language'])) {
+            $_SESSION['language'] = 'rw';
+        }
+    }
+} else {
+    $_SESSION['theme'] = $_SESSION['theme'] ?? 'dark';
+    $_SESSION['language'] = $_SESSION['language'] ?? 'rw';
 }
 

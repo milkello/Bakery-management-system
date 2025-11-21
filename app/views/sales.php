@@ -7,17 +7,17 @@
     </div>
     <div class="bg-gray-800 rounded-xl p-6 text-center">
         <i data-feather="dollar-sign" class="w-12 h-12 text-fuchsia-500 mx-auto mb-4"></i>
-        <h3 class="text-2xl font-bold text-fuchsia-400">$<?= number_format($total_revenue, 2) ?></h3>
+        <h3 class="text-2xl font-bold text-fuchsia-400"><?= number_format($total_revenue, 0) ?> Rwf</h3>
         <p class="text-gray-400">Total Revenue</p>
     </div>
     <div class="bg-gray-800 rounded-xl p-6 text-center">
         <i data-feather="trending-up" class="w-12 h-12 text-lime-500 mx-auto mb-4"></i>
-        <h3 class="text-2xl font-bold text-lime-400">$<?= number_format($today_revenue, 2) ?></h3>
+        <h3 class="text-2xl font-bold text-lime-400"><?= number_format($today_revenue, 0) ?> Rwf</h3>
         <p class="text-gray-400">Today's Revenue</p>
     </div>
     <div class="bg-gray-800 rounded-xl p-6 text-center">
         <i data-feather="bar-chart-2" class="w-12 h-12 text-fuchsia-500 mx-auto mb-4"></i>
-        <h3 class="text-2xl font-bold text-fuchsia-400">$<?= number_format($avg_sale_value, 2) ?></h3>
+        <h3 class="text-2xl font-bold text-fuchsia-400"><?= number_format($avg_sale_value, 0) ?> Rwf</h3>
         <p class="text-gray-400">Avg. Sale Value</p>
     </div>
 </div>
@@ -42,6 +42,28 @@
                 </select>
             </div>
 
+            <div class="md:col-span-2">
+                <label class="block text-gray-400 text-sm mb-2">Select Customer</label>
+                <div class="flex space-x-2">
+                    <select name="customer_id" id="customerSelect"
+                            class="flex-1 bg-gray-700 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-lime-500">
+                        <option value="" data-type="Regular">-- Walk-in Customer --</option>
+                        <?php foreach ($customers as $customer): ?>
+                            <option value="<?= htmlspecialchars($customer['id']) ?>" data-type="<?= htmlspecialchars($customer['customer_type']) ?>">
+                                <?= htmlspecialchars($customer['name']) ?> 
+                                <?= !empty($customer['phone']) ? '(' . htmlspecialchars($customer['phone']) . ')' : '' ?>
+                                - <?= htmlspecialchars($customer['customer_type']) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                    <a href="?page=customers" target="_blank" 
+                       class="bg-gray-700 hover:bg-gray-600 text-lime-400 px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors">
+                        <i data-feather="plus" class="w-4 h-4"></i>
+                        <span>New</span>
+                    </a>
+                </div>
+            </div>
+
             <div>
                 <label class="block text-gray-400 text-sm mb-2">Quantity</label>
                 <input type="number" name="quantity" min="1" required 
@@ -50,7 +72,7 @@
             </div>
 
             <div>
-                <label class="block text-gray-400 text-sm mb-2">Unit Price ($)</label>
+                <label class="block text-gray-400 text-sm mb-2">Unit Price ( Rwf )</label>
                 <input type="number" name="unit_price" step="0.01" required 
                        class="w-full bg-gray-700 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-lime-500"
                        placeholder="0.00" id="unitPrice">
@@ -58,7 +80,7 @@
 
             <div>
                 <label class="block text-gray-400 text-sm mb-2">Customer Type</label>
-                <select name="customer_type" 
+                <select name="customer_type" id="customerTypeSelect"
                         class="w-full bg-gray-700 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-lime-500">
                     <option value="Regular">Regular</option>
                     <option value="Wholesale">Wholesale</option>
@@ -82,7 +104,7 @@
                 <div class="bg-gray-700 rounded-lg p-4 mb-4">
                     <div class="flex justify-between items-center">
                         <span class="text-gray-400">Total Amount:</span>
-                        <span id="totalAmount" class="text-2xl font-bold text-lime-400">$0.00</span>
+                        <span id="totalAmount" class="text-2xl font-bold text-lime-400">0.00 Rwf</span>
                     </div>
                 </div>
                 <!-- Stock availability check -->
@@ -190,9 +212,16 @@
 <div class="bg-gray-800 rounded-xl p-6 shadow-lg">
     <div class="flex justify-between items-center mb-6">
         <h3 class="text-xl font-bold text-lime-400">Sales History</h3>
-        <div class="flex items-center space-x-2 text-gray-400">
-            <i data-feather="calendar" class="w-4 h-4"></i>
-            <span>Recent Transactions</span>
+        <div class="flex items-center space-x-4">
+            <a href="?page=export_page_pdf&type=sales" target="_blank"
+               class="flex items-center space-x-2 bg-lime-500 hover:bg-lime-600 text-white px-4 py-2 rounded-lg transition">
+                <i data-feather="download" class="w-4 h-4"></i>
+                <span>Export PDF</span>
+            </a>
+            <div class="flex items-center space-x-2 text-gray-400">
+                <i data-feather="calendar" class="w-4 h-4"></i>
+                <span>Recent Transactions</span>
+            </div>
         </div>
     </div>
     
@@ -230,10 +259,10 @@
                         </span>
                     </td>
                     <td class="py-3 px-4">
-                        <span class="text-fuchsia-400 font-bold">$<?= number_format($sale['unit_price'], 2) ?></span>
+                        <span class="text-fuchsia-400 font-bold"><?= number_format($sale['unit_price'], 0) ?> Rwf</span>
                     </td>
                     <td class="py-3 px-4">
-                        <span class="text-lime-400 font-bold">$<?= number_format($sale['total_price'], 2) ?></span>
+                        <span class="text-lime-400 font-bold"><?= number_format($sale['total_price'], 0) ?> Rwf</span>
                     </td>
                     <td class="py-3 px-4">
                         <span class="bg-gray-700 text-gray-300 px-2 py-1 rounded-full text-xs">
@@ -302,6 +331,21 @@ document.addEventListener("DOMContentLoaded", () => {
     const originalSubmitClass = submitButton.className;
     const disabledSubmitClass = 'w-full bg-gray-500 cursor-not-allowed text-white font-semibold py-3 rounded-lg';
     
+    // Auto-fill customer type when customer is selected
+    const customerSelect = document.getElementById('customerSelect');
+    const customerTypeSelect = document.getElementById('customerTypeSelect');
+    
+    if (customerSelect && customerTypeSelect) {
+        customerSelect.addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            const customerType = selectedOption.getAttribute('data-type');
+            
+            if (customerType) {
+                customerTypeSelect.value = customerType;
+            }
+        });
+    }
+    
     // Auto-fill unit price when product is selected
     productSelect.addEventListener('change', function() {
         const selectedOption = this.options[this.selectedIndex];
@@ -314,7 +358,7 @@ document.addEventListener("DOMContentLoaded", () => {
             calculateTotal();
         } else {
             unitPriceInput.value = '';
-            totalAmountDisplay.textContent = '$0.00';
+            totalAmountDisplay.textContent = '0.00 Rwf';
         }
     });
     
@@ -328,7 +372,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const unitPrice = parseFloat(unitPriceInput.value) || 0;
         const total = quantity * unitPrice;
         
-        totalAmountDisplay.textContent = `$${total.toFixed(2)}`;
+        totalAmountDisplay.textContent = `${total.toFixed(2)} Rwf`;
     }
 
     function updateStockCheck() {
@@ -412,7 +456,7 @@ document.addEventListener("DOMContentLoaded", () => {
       </div>
       <div>
         <label class="block text-gray-400 text-sm mb-1">Amount</label>
-        <div id="momoAmount" class="text-xl font-bold text-lime-400">$0.00</div>
+        <div id="momoAmount" class="text-xl font-bold text-lime-400">0.00 Rwf</div>
       </div>
       <div id="momoStatus" class="text-sm text-gray-300"></div>
       <div class="flex justify-end space-x-2 mt-4">
@@ -439,7 +483,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function openModal() {
         // set amount display
-        momoAmount.textContent = totalDisplay.textContent || '$0.00';
+        momoAmount.textContent = (totalDisplay && totalDisplay.textContent ? totalDisplay.textContent.replace('$', '') : '0.00') + ' Rwf';
         momoStatus.textContent = '';
         momoPhone.value = '';
         momoModal.classList.remove('hidden');
@@ -469,7 +513,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!phone) { momoStatus.textContent = 'Please enter phone number.'; return; }
 
         // amount as number (strip $)
-        const amtText = (totalDisplay.textContent || '$0').replace(/[^0-9\.\-]/g, '');
+        const amtText = (totalDisplay.textContent || '0').replace(/[^0-9\.\-]/g, '');
         const amount = parseFloat(amtText) || 0;
         if (amount <= 0) { momoStatus.textContent = 'Invalid amount.'; return; }
 

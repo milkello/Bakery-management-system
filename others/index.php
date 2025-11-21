@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BMS - Dashboard</title>
+    <title><?php echo $conn->query("SELECT business_name FROM system_settings LIMIT 1")->fetchColumn(); ?> - Dashboard</title>
     <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -39,7 +39,7 @@
     <div class="sidebar w-20 hover:w-64 bg-gray-800 fixed h-full overflow-hidden transition-all duration-300 z-50">
         <div class="p-4 flex items-center">
             <i data-feather="star" class="text-lime-500 w-8 h-8"></i>
-            <span class="ml-4 text-xl font-bold hidden lg:block">BMS</span>
+            <span class="ml-4 text-xl font-bold hidden lg:block"><?php echo $conn->query("SELECT business_name FROM system_settings LIMIT 1")->fetchColumn(); ?></span>
         </div>
         <nav class="mt-8">
             <a href="public/?page=dashboard" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-lime-400 transition-colors">
@@ -104,7 +104,7 @@
                     <div class="flex justify-between items-start">
                         <div>
                             <p class="text-gray-400">Total Revenue</p>
-                            <h3 class="text-2xl font-bold text-lime-400">$12,489</h3>
+                            <h3 class="text-2xl font-bold text-lime-400">12,489 Rwf</h3>
                             <p class="text-green-400 text-sm">+12% from last month</p>
                         </div>
                         <i data-feather="dollar-sign" class="text-lime-500 w-8 h-8"></i>
@@ -168,7 +168,7 @@
                                 <p class="text-gray-400 text-sm">2 minutes ago</p>
                             </div>
                         </div>
-                        <span class="text-lime-400 font-bold">$45.99</span>
+                        <span class="text-lime-400 font-bold">45.99 Rwf</span>
                     </div>
                     <div class="flex items-center justify-between p-3 bg-gray-700 rounded-lg">
                         <div class="flex items-center space-x-3">

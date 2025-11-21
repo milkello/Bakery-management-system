@@ -29,7 +29,13 @@ $prods = $pdo->query('SELECT * FROM products ORDER BY created_at DESC')->fetchAl
 
 // Calculate statistics
 $total_products = count($prods);
-$total_value = $pdo->query('SELECT SUM(price) FROM products')->fetchColumn();
+
+// Total stock value = sum(price * stock)
+$total_value_stmt = $pdo->query('SELECT SUM(price * COALESCE(stock,0)) AS total_stock_value FROM products');
+$total_value_row = $total_value_stmt->fetch(PDO::FETCH_ASSOC);
+$total_value = $total_value_row['total_stock_value'] ?? 0;
+
+// Average unit price unchanged
 $avg_price = $pdo->query('SELECT AVG(price) FROM products')->fetchColumn();
 ?>
 
@@ -42,12 +48,12 @@ $avg_price = $pdo->query('SELECT AVG(price) FROM products')->fetchColumn();
     </div>
     <div class="bg-gray-800 rounded-xl p-6 text-center">
         <i data-feather="dollar-sign" class="w-12 h-12 text-fuchsia-500 mx-auto mb-4"></i>
-        <h3 class="text-2xl font-bold text-fuchsia-400">$<?= number_format($total_value, 2) ?></h3>
+        <h3 class="text-2xl font-bold text-fuchsia-400"><?= number_format($total_value, 0) ?> Rwf</h3>
         <p class="text-gray-400">Total Value</p>
     </div>
     <div class="bg-gray-800 rounded-xl p-6 text-center">
         <i data-feather="trending-up" class="w-12 h-12 text-lime-500 mx-auto mb-4"></i>
-        <h3 class="text-2xl font-bold text-lime-400">$<?= number_format($avg_price, 2) ?></h3>
+        <h3 class="text-2xl font-bold text-lime-400"><?= number_format($avg_price, 0) ?> Rwf</h3>
         <p class="text-gray-400">Avg. Price</p>
     </div>
 </div>
@@ -56,10 +62,17 @@ $avg_price = $pdo->query('SELECT AVG(price) FROM products')->fetchColumn();
 <div class="bg-gray-800 rounded-xl p-6 shadow-lg">
     <div class="flex justify-between items-center mb-6">
         <h3 class="text-xl font-bold text-lime-400">Product List</h3>
-        <button id="addProductBtn" class="bg-lime-500 hover:bg-lime-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors">
-            <i data-feather="plus" class="w-4 h-4"></i>
-            <span>Add Product</span>
-        </button>
+        <div class="flex items-center space-x-3">
+            <a href="?page=export_page_pdf&type=products" target="_blank"
+               class="bg-fuchsia-500 hover:bg-fuchsia-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors">
+                <i data-feather="download" class="w-4 h-4"></i>
+                <span>Export PDF</span>
+            </a>
+            <button id="addProductBtn" class="bg-lime-500 hover:bg-lime-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors">
+                <i data-feather="plus" class="w-4 h-4"></i>
+                <span>Add Product</span>
+            </button>
+        </div>
     </div>
     
     <div class="overflow-x-auto">
@@ -69,6 +82,8 @@ $avg_price = $pdo->query('SELECT AVG(price) FROM products')->fetchColumn();
                     <th class="text-left py-3 px-4 text-lime-400">Product</th>
                     <th class="text-left py-3 px-4 text-lime-400">SKU</th>
                     <th class="text-left py-3 px-4 text-lime-400">Price</th>
+                    <th class="text-left py-3 px-4 text-lime-400">Stock</th>
+                    <th class="text-left py-3 px-4 text-lime-400">Value</th>
                     <th class="text-left py-3 px-4 text-lime-400">Unit</th>
                     <th class="text-left py-3 px-4 text-lime-400">Created</th>
                     <th class="text-left py-3 px-4 text-lime-400">Actions</th>
@@ -94,7 +109,14 @@ $avg_price = $pdo->query('SELECT AVG(price) FROM products')->fetchColumn();
                         </span>
                     </td>
                     <td class="py-3 px-4">
-                        <span class="text-fuchsia-400 font-bold">$<?= number_format($p['price'], 2) ?></span>
+                        <span class="text-fuchsia-400 font-bold"><?= number_format($p['price'], 0) ?> Rwf</span>
+                    </td>
+                    <td class="py-3 px-4 text-gray-300">
+                        <?= number_format($p['stock'] ?? 0, 0) ?>
+                    </td>
+                    <td class="py-3 px-4 text-gray-300">
+                        <?php $row_value = ($p['price'] ?? 0) * ($p['stock'] ?? 0); ?>
+                        <?= number_format($row_value, 0) ?> Rwf
                     </td>
                     <td class="py-3 px-4">
                         <span class="bg-lime-500 text-white px-2 py-1 rounded-full text-xs">
@@ -151,7 +173,7 @@ $avg_price = $pdo->query('SELECT AVG(price) FROM products')->fetchColumn();
             <div class="grid grid-cols-2 gap-4">
                 <div>
                     <label class="block text-gray-400 text-sm mb-2">Price</label>
-                    <input type="number" id="productPrice" name="price" placeholder="0.00" step="0.01" required
+                    <input type="number" id="productPrice" name="price" placeholder="0.00" step="0.01" min="0" required
                            class="w-full bg-gray-700 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-lime-500">
                 </div>
                 <div>

@@ -3,17 +3,17 @@
     <div class="bg-gray-800 rounded-xl p-6 text-center">
         <i data-feather="package" class="w-12 h-12 text-lime-500 mx-auto mb-4"></i>
         <h3 class="text-2xl font-bold text-lime-400"><?= number_format($total_production) ?></h3>
-        <p class="text-gray-400">Total Productions</p>
+        <p class="text-gray-400">Today's Productions</p>
     </div>
     <div class="bg-gray-800 rounded-xl p-6 text-center">
         <i data-feather="clock" class="w-12 h-12 text-fuchsia-500 mx-auto mb-4"></i>
         <h3 class="text-2xl font-bold text-fuchsia-400"><?= number_format($today_production) ?></h3>
-        <p class="text-gray-400">Today's Productions</p>
+        <p class="text-gray-400">Number of Productions</p>
     </div>
     <div class="bg-gray-800 rounded-xl p-6 text-center">
         <i data-feather="box" class="w-12 h-12 text-lime-500 mx-auto mb-4"></i>
-        <h3 class="text-2xl font-bold text-lime-400"><?= count($products) ?></h3>
-        <p class="text-gray-400">Available Products</p>
+        <h3 class="text-2xl font-bold text-lime-400"><?= $toal_stock ?></h3>
+        <p class="text-gray-400">Products in Stock</p>
     </div>
 </div>
 
@@ -41,10 +41,27 @@
                 <select name="product_id" required 
                         class="w-full bg-gray-700 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-lime-500"
                         id="productSelect">
-                    <option value="">-- Choose Product --</option>
+                    <option value="">— Choose Product —</option>
                     <?php foreach ($products as $product): ?>
-                        <option value="<?= $product['id'] ?>" data-has-recipe="<?= isset($all_recipes[$product['id']]) ? 'true' : 'false' ?>">
-                            <?= htmlspecialchars($product['name']) ?> 
+                        <?php 
+                            $has_plan = isset($today_plans[$product['id']]);
+                            $has_production = isset($today_production_data[$product['id']]);
+                            $prod_qty = $has_production ? $today_production_data[$product['id']]['quantity_produced'] : 0;
+                            
+                            // Indicators: ✅ has plan, 📝 has production, ⚠️ no plan
+                            if ($has_production) {
+                                $indicator = ' 📝 (' . $prod_qty . ' recorded)';
+                            } elseif ($has_plan) {
+                                $indicator = ' ✅';
+                            } else {
+                                $indicator = ' ⚠️';
+                            }
+                        ?>
+                        <option value="<?= $product['id'] ?>" 
+                                data-has-plan="<?= $has_plan ? 'true' : 'false' ?>"
+                                data-has-production="<?= $has_production ? 'true' : 'false' ?>"
+                                data-prod-qty="<?= $prod_qty ?>">
+                            <?= htmlspecialchars($product['name']) ?><?= $indicator ?>
                             <?php if ($product['sku']): ?>
                                 (<?= htmlspecialchars($product['sku']) ?>)
                             <?php endif; ?>
@@ -54,26 +71,25 @@
             </div>
 
             <div>
-                <label class="block text-gray-400 text-sm mb-2">Quantity to Produce</label>
+                <label class="block text-gray-400 text-sm mb-2" id="quantityLabel">Quantity to Produce</label>
                 <input type="number" name="quantity" min="1" required 
                        class="w-full bg-gray-700 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-lime-500"
                        placeholder="How many units?"
                        id="quantityInput">
             </div>
 
-            <!-- Recipe Preview -->
-            <div id="recipePreview" class="p-4 bg-gray-700 rounded-lg hidden">
-                <h4 class="text-lime-400 font-semibold mb-2">Recipe Requirements:</h4>
-                <div id="recipeDetails" class="text-gray-300 text-sm space-y-1">
-                    <!-- Will be populated by JavaScript -->
-                </div>
+            <!-- Material Plan Status -->
+            <div id="planStatus" class="p-4 rounded-lg hidden">
+                <div id="planDetails" class="text-sm"></div>
             </div>
 
-            <!-- Production Check Result -->
-            <div id="productionCheck" class="p-4 rounded-lg hidden">
-                <div id="checkResult"></div>
+            <!-- Production Status (if exists) -->
+            <div id="productionStatus" class="p-4 rounded-lg hidden">
+                <div id="productionDetails" class="text-sm"></div>
             </div>
 
+            <input type="hidden" name="is_update" id="isUpdateInput" value="0">
+            
             <button type="submit" name="produce" id="produceButton"
                     class="w-full bg-lime-500 hover:bg-lime-600 text-white font-bold py-3 px-4 rounded-lg transition-colors">
                 🚀 Start Production
@@ -111,9 +127,16 @@
 <div class="bg-gray-800 rounded-xl p-6 shadow-lg">
     <div class="flex justify-between items-center mb-6">
         <h3 class="text-xl font-bold text-lime-400">Recent Production</h3>
-        <div class="flex items-center space-x-2 text-gray-400">
-            <i data-feather="calendar" class="w-4 h-4"></i>
-            <span>Latest Activities</span>
+        <div class="flex items-center space-x-4">
+            <a href="?page=export_page_pdf&type=production" target="_blank"
+               class="flex items-center space-x-2 bg-fuchsia-500 hover:bg-fuchsia-600 text-white px-4 py-2 rounded-lg transition">
+                <i data-feather="download" class="w-4 h-4"></i>
+                <span>Export PDF</span>
+            </a>
+            <div class="flex items-center space-x-2 text-gray-400">
+                <i data-feather="calendar" class="w-4 h-4"></i>
+                <span>Latest Activities</span>
+            </div>
         </div>
     </div>
     
@@ -154,120 +177,83 @@
 </div>
 
 <script>
-// Preload all recipes data from PHP
-const allRecipes = <?= json_encode($all_recipes) ?>;
-
 document.addEventListener("DOMContentLoaded", function() {
     const productSelect = document.getElementById('productSelect');
-    const quantityInput = document.getElementById('quantityInput');
-    const recipePreview = document.getElementById('recipePreview');
-    const recipeDetails = document.getElementById('recipeDetails');
-    const productionCheck = document.getElementById('productionCheck');
-    const checkResult = document.getElementById('checkResult');
+    const planStatus = document.getElementById('planStatus');
+    const planDetails = document.getElementById('planDetails');
+    const productionStatus = document.getElementById('productionStatus');
+    const productionDetails = document.getElementById('productionDetails');
     const produceButton = document.getElementById('produceButton');
+    const isUpdateInput = document.getElementById('isUpdateInput');
+    const quantityInput = document.getElementById('quantityInput');
+    const quantityLabel = document.getElementById('quantityLabel');
     
-    console.log('Available recipes:', allRecipes); // Debug log
-
-    // Show recipe when product is selected
+    // Show plan status when product is selected
     productSelect.addEventListener('change', function() {
         const productId = this.value;
         const selectedOption = this.options[this.selectedIndex];
-        const hasRecipe = selectedOption.getAttribute('data-has-recipe') === 'true';
+        const hasPlan = selectedOption.getAttribute('data-has-plan') === 'true';
+        const hasProduction = selectedOption.getAttribute('data-has-production') === 'true';
+        const prodQty = selectedOption.getAttribute('data-prod-qty');
         
-        if (productId && hasRecipe && allRecipes[productId]) {
-            const recipe = allRecipes[productId];
-            let html = '';
-            recipe.forEach(ingredient => {
-                const quantity = ingredient.quantity || 0;
-                const unit = ingredient.unit || '';
-                const materialName = ingredient.material_name || 'Unknown Material';
-                const available = ingredient.available_qty || 0;
-                html += `<p>• ${materialName}: ${quantity}${unit} per unit (Available: ${available}${unit})</p>`;
-            });
-            recipeDetails.innerHTML = html;
-            recipePreview.classList.remove('hidden');
-            productionCheck.classList.add('hidden');
-            
-            // Check production feasibility if quantity is already entered
-            if (quantityInput.value) {
-                checkProductionFeasibility(productId, parseInt(quantityInput.value));
+        if (productId) {
+            // Check if production already exists
+            if (hasProduction) {
+                // SHOW UPDATE MODE
+                productionStatus.className = 'p-4 bg-blue-900 border border-blue-700 rounded-lg';
+                productionDetails.innerHTML = '<div class="text-blue-300"><strong>📝 Production Already Recorded</strong><br><span class="text-sm">Current: ' + prodQty + ' units. You can UPDATE to correct mistakes.</span></div>';
+                productionStatus.classList.remove('hidden');
+                
+                // Set form to update mode
+                isUpdateInput.value = '1';
+                quantityInput.value = prodQty;
+                quantityLabel.textContent = 'Update Quantity';
+                produceButton.innerHTML = '✏️ Update Production';
+                produceButton.className = 'w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-lg transition-colors';
+                
+                // Hide plan status when showing production status
+                planStatus.classList.add('hidden');
+            } else {
+                // SHOW NEW PRODUCTION MODE
+                productionStatus.classList.add('hidden');
+                isUpdateInput.value = '0';
+                quantityInput.value = '';
+                quantityLabel.textContent = 'Quantity to Produce';
+                produceButton.innerHTML = '🚀 Start Production';
+                
+                if (hasPlan) {
+                    planStatus.className = 'p-4 bg-green-900 border border-green-700 rounded-lg';
+                    planDetails.innerHTML = '<div class="text-green-300"><strong>✅ Material plan exists</strong><br><span class="text-sm">You can proceed with production</span></div>';
+                    planStatus.classList.remove('hidden');
+                    produceButton.disabled = false;
+                    produceButton.className = 'w-full bg-lime-500 hover:bg-lime-600 text-white font-bold py-3 px-4 rounded-lg transition-colors';
+                } else {
+                    planStatus.className = 'p-4 bg-yellow-900 border border-yellow-700 rounded-lg';
+                    planDetails.innerHTML = '<div class="text-yellow-300"><strong>⚠️ No material plan for today</strong><br><span class="text-sm">Please create an ingredient plan in Product Boards before production</span></div>';
+                    planStatus.classList.remove('hidden');
+                    produceButton.disabled = false; // Allow submission to show proper error
+                    produceButton.className = 'w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 px-4 rounded-lg transition-colors';
+                }
             }
-        } else if (productId && !hasRecipe) {
-            recipeDetails.innerHTML = '<p class="text-yellow-400">No recipe found for this product</p>';
-            recipePreview.classList.remove('hidden');
-            productionCheck.classList.add('hidden');
         } else {
-            recipePreview.classList.add('hidden');
-            productionCheck.classList.add('hidden');
-        }
-    });
-
-    // Check production feasibility when quantity changes
-    quantityInput.addEventListener('input', function() {
-        const productId = productSelect.value;
-        const quantity = parseInt(this.value);
-        
-        if (productId && quantity && allRecipes[productId]) {
-            checkProductionFeasibility(productId, quantity);
-        } else {
-            productionCheck.classList.add('hidden');
+            planStatus.classList.add('hidden');
+            productionStatus.classList.add('hidden');
+            isUpdateInput.value = '0';
+            quantityInput.value = '';
+            quantityLabel.textContent = 'Quantity to Produce';
+            produceButton.innerHTML = '🚀 Start Production';
             produceButton.disabled = false;
             produceButton.className = 'w-full bg-lime-500 hover:bg-lime-600 text-white font-bold py-3 px-4 rounded-lg transition-colors';
         }
     });
-
-    function checkProductionFeasibility(productId, quantity) {
-        if (!quantity || quantity < 1) {
-            productionCheck.classList.add('hidden');
-            return;
-        }
-
-        const recipe = allRecipes[productId];
-        let impossibleReasons = [];
-
-        recipe.forEach(ingredient => {
-            const requiredPerUnit = ingredient.quantity || 0;
-            const requiredTotal = requiredPerUnit * quantity;
-            const available = parseFloat(ingredient.available_qty) || 0;
-
-            console.log('Checking:', ingredient.material_name, 'Required:', requiredTotal, 'Available:', available);
-
-            if (requiredTotal > available) {
-                impossibleReasons.push({
-                    material: ingredient.material_name,
-                    required: requiredTotal,
-                    available: available,
-                    unit: ingredient.unit
-                });
-            }
-        });
-
-        // Display results
-        if (impossibleReasons.length > 0) {
-            productionCheck.className = 'p-4 bg-red-900 border border-red-700 rounded-lg text-red-300';
-            let html = '<div class="font-semibold mb-2">🚫 IMPOSSIBLE PRODUCTION</div>';
-            html += '<div class="text-sm">Insufficient materials:</div>';
-            impossibleReasons.forEach(reason => {
-                html += `<div class="text-sm mt-1">• <strong>${reason.material}</strong>: Need ${reason.required}${reason.unit}, Have ${reason.available}${reason.unit}</div>`;
-            });
-            checkResult.innerHTML = html;
-            produceButton.disabled = true;
-            produceButton.className = 'w-full bg-gray-500 cursor-not-allowed text-white font-bold py-3 px-4 rounded-lg';
-            productionCheck.classList.remove('hidden');
-        } else {
-            productionCheck.className = 'p-4 bg-green-900 border border-green-700 rounded-lg text-green-300';
-            checkResult.innerHTML = '<div class="font-semibold">✅ Production Possible</div><div class="text-sm">All materials are sufficient</div>';
-            produceButton.disabled = false;
-            produceButton.className = 'w-full bg-lime-500 hover:bg-lime-600 text-white font-bold py-3 px-4 rounded-lg transition-colors';
-            productionCheck.classList.remove('hidden');
-        }
-    }
     
     // Auto-hide alerts after 5 seconds
     setTimeout(function() {
-        const alerts = document.querySelectorAll('.bg-green-900, .bg-red-900');
+        const alerts = document.querySelectorAll('.mb-6.p-4');
         alerts.forEach(alert => {
-            alert.style.display = 'none';
+            if (alert.classList.contains('bg-green-900') || alert.classList.contains('bg-red-900')) {
+                alert.style.display = 'none';
+            }
         });
     }, 5000);
     

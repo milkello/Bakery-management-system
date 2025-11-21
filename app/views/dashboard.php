@@ -3,9 +3,9 @@
                 <div class="bg-gray-800 rounded-xl p-6 shadow-lg border-l-4 border-lime-500">
                     <div class="flex justify-between items-start">
                         <div>
-                            <p class="text-gray-400">Total Sales</p>
-                            <h3 class="text-2xl font-bold text-lime-400"><?= number_format($total_sales,0) ?> Frw</h3>
-                            <p class="text-green-400 text-sm"><?= $growthFormatted ?>% this month</p>
+                            <p class="text-gray-400">Total Monthly Sales</p>
+                            <h3 class="text-2xl font-bold text-lime-400"><?= number_format($total_sales,0) ?> Frw </h3>
+                            <p class="text-green-400 text-sm"><?= $growthFormatted ?>% of last month <br> <?= number_format($today_revenue ?? 0, 0) ?> Frw of today
                         </div>
                         <i data-feather="dollar-sign" class="text-lime-500 w-8 h-8"></i>
                     </div>
@@ -13,7 +13,7 @@
                 <div class="bg-gray-800 rounded-xl p-6 shadow-lg border-l-4 border-fuchsia-500">
                     <div class="flex justify-between items-start">
                         <div>
-                            <p class="text-gray-400">Products</p>
+                            <p class="text-gray-400">Products In Stock</p>
                             <h3 class="text-2xl font-bold text-fuchsia-400"><?= $toal_stock ?></h3>
                             <!-- <h3 class="text-2xl font-bold text-fuchsia-400"><?= $total_products ?></h3> -->
                             <p class="text-green-400 text-sm"><?= number_format($today_production) ?> products made today</p>
@@ -24,9 +24,10 @@
                 <div class="bg-gray-800 rounded-xl p-6 shadow-lg border-l-4 border-lime-500">
                     <div class="flex justify-between items-start">
                         <div>
-                            <p class="text-gray-400">Ingredients in stock</p>
+                            <p class="text-gray-400">Ingredients In stock</p>
                             <h3 class="text-2xl font-bold text-lime-400"><?= $raw_materials ?> types</h3>
-                            <p class="text-red-400 text-sm"><?= $low_stock_count ?> low stock</p>
+                            <p class="text-green-400 text-sm"><?= number_format($pdo->query('SELECT SUM(unit_cost * stock_quantity) FROM raw_materials')->fetchColumn() ?: 0, 0) ?> Frw stock value</p>
+                            <p class="text-red-400 text-sm"><?= $low_stock_count == '0' ? 'No' : $low_stock_count ?> low stock products</p>
                         </div>
                         <i data-feather="package" class="text-lime-500 w-8 h-8"></i>
                     </div>
@@ -44,40 +45,40 @@
             </div>
 
             <!-- Quick daily snapshot -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <!-- <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                 <div class="bg-gray-800 rounded-xl p-4 flex items-center justify-between">
                     <div>
-                        <p class="text-gray-400 text-sm">Today's Material Orders</p>
-                        <h4 class="text-lg font-bold text-lime-400"><?= intval($today_material_orders) ?></h4>
-                        <p class="text-gray-400 text-sm">Value: <?= number_format($today_materials_value,2) ?> Frw</p>
+                        <p class="text-gray-400 text-sm">Today's Production</p>
+                        <h4 class="text-lg font-bold text-fuchsia-400"><?= intval($today_production ?? 0) ?></h4>
+                        <p class="text-gray-400 text-sm">Products made today</p>
                     </div>
                     <div>
-                        <a href="?page=product_boards" class="bg-lime-500 px-3 py-2 rounded text-white">Open</a>
+                        <a href="?page=production" class="bg-fuchsia-500 px-3 py-2 rounded text-white">Open</a>
                     </div>
                 </div>
                 <div class="bg-gray-800 rounded-xl p-4 flex items-center justify-between">
                     <div>
-                        <p class="text-gray-400 text-sm">Products made today</p>
-                        <h4 class="text-lg font-bold text-fuchsia-400"><?= intval($today_production_records ?: $today_production) ?></h4>
-                        <p class="text-gray-400 text-sm">Recorded production count</p>
+                        <p class="text-gray-400 text-sm">Today's Sales Revenue</p>
+                        <h4 class="text-lg font-bold text-lime-400"><?= number_format($today_revenue ?? 0, 0) ?> Frw</h4>
+                        <p class="text-gray-400 text-sm">Revenue from sales today</p>
                     </div>
                     <div>
-                        <a href="?page=production_records" class="bg-fuchsia-500 px-3 py-2 rounded text-white">Open</a>
+                        <a href="?page=sales" class="bg-lime-500 px-3 py-2 rounded text-white">Open</a>
                     </div>
                 </div>
                 <div class="bg-gray-800 rounded-xl p-4 flex items-center justify-between">
                     <div>
                         <p class="text-gray-400 text-sm">Inventory Value</p>
-                        <h4 class="text-lg font-bold text-lime-400"><?= number_format($pdo->query('SELECT SUM(unit_cost * stock_quantity) FROM raw_materials')->fetchColumn() ?: 0, 2) ?> Frw</h4>
-                        <p class="text-gray-400 text-sm">Materials total value</p>
+                        <h4 class="text-lg font-bold text-blue-400"><?= number_format($pdo->query('SELECT SUM(unit_cost * stock_quantity) FROM raw_materials')->fetchColumn() ?: 0, 0) ?> Frw</h4>
+                        <p class="text-gray-400 text-sm">Ingredients total value</p>
                     </div>
                     <div>
-                        <a href="?page=raw_materials" class="bg-gray-700 px-3 py-2 rounded text-white">Open</a>
+                        <a href="?page=raw_materials" class="bg-blue-500 px-3 py-2 rounded text-white">Open</a>
                     </div>
                 </div>
-            </div>
+            </div> -->
 
-            <!-- Export Business Report -->
+            <!-- Export Business Report
             <div class="mb-6 flex items-center justify-end">
                 <form method="GET" action="" class="flex items-center space-x-2">
                     <input type="hidden" name="page" value="dashboard">
@@ -85,63 +86,140 @@
                     <button type="submit" name="format" value="pdf" class="bg-lime-500 hover:bg-lime-600 text-white font-semibold px-3 py-2 rounded-lg">Export PDF</button>
                     <button type="submit" name="format" value="csv" class="bg-fuchsia-500 hover:bg-fuchsia-600 text-white font-semibold px-3 py-2 rounded-lg">Export CSV</button>
                 </form>
+            </div> -->
+
+            <!-- Time Period Filter (Shared for both charts) -->
+            <div class="bg-gradient-to-r from-gray-800 to-gray-700 rounded-xl p-4 mb-4 shadow-lg border border-gray-700">
+                <div class="flex flex-wrap items-center justify-between gap-4">
+                    <div class="flex items-center space-x-3">
+                        <i data-feather="calendar" class="text-lime-400 w-5 h-5"></i>
+                        <h4 class="text-white font-semibold">Time Period:</h4>
+                    </div>
+                    <div class="flex gap-2">
+                        <button data-range="daily" class="range-btn bg-lime-500 px-4 py-2 rounded-lg text-white font-medium hover:bg-lime-600 transition-all transform hover:scale-105 shadow-md">Daily</button>
+                        <button data-range="weekly" class="range-btn bg-gray-700 px-4 py-2 rounded-lg text-white font-medium hover:bg-gray-600 transition-all transform hover:scale-105 shadow-md">Weekly</button>
+                        <button data-range="monthly" class="range-btn bg-gray-700 px-4 py-2 rounded-lg text-white font-medium hover:bg-gray-600 transition-all transform hover:scale-105 shadow-md">Monthly</button>
+                        <button data-range="yearly" class="range-btn bg-gray-700 px-4 py-2 rounded-lg text-white font-medium hover:bg-gray-600 transition-all transform hover:scale-105 shadow-md">Yearly</button>
+                    </div>
+                </div>
             </div>
 
             <!-- Charts Section -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                <div class="bg-gray-800 rounded-xl p-6 shadow-lg">
-                    <h3 class="text-xl font-bold mb-4 text-lime-400">Sales Trends</h3>
-                    <!-- Buttons -->
-                    <div class="flex gap-3 mb-4">
-                        <button data-range="daily" class="range-btn bg-lime-500 px-3 py-1 rounded text-white hover:bg-lime-600">Daily</button>
-                        <button data-range="weekly" class="range-btn bg-gray-700 px-3 py-1 rounded text-white hover:bg-gray-600">Weekly</button>
-                        <button data-range="monthly" class="range-btn bg-gray-700 px-3 py-1 rounded text-white hover:bg-gray-600">Monthly</button>
-                        <button data-range="yearly" class="range-btn bg-gray-700 px-3 py-1 rounded text-white hover:bg-gray-600">Yearly</button>
+                <div class="bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-700">
+                    <div class="flex items-center space-x-2 mb-4">
+                        <i data-feather="trending-up" class="text-lime-400 w-6 h-6"></i>
+                        <h3 class="text-xl font-bold text-lime-400">Sales Trends</h3>
                     </div>
                     <canvas id="revenueChart"></canvas>
                 </div>
-                <div class="bg-gray-800 rounded-xl p-6 shadow-lg">
-                    <h3 class="text-xl font-bold mb-4 text-fuchsia-400">Best Sold</h3>
-                    <!-- Buttons -->
-                    <div class="flex gap-3 mb-4">
-                        <button data-range="daily" class="product-range-btn bg-gray-700 px-3 py-1 rounded text-white hover:bg-gray-600">Daily</button>
-                        <button data-range="weekly" class="product-range-btn bg-gray-700 px-3 py-1 rounded text-white hover:bg-gray-600">Weekly</button>
-                        <button data-range="monthly" class="product-range-btn bg-lime-500 px-3 py-1 rounded text-white hover:bg-lime-600">Monthly</button>
-                        <button data-range="yearly" class="product-range-btn bg-gray-700 px-3 py-1 rounded text-white hover:bg-gray-600">Yearly</button>
+                <div class="bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-700">
+                    <div class="flex items-center space-x-2 mb-4">
+                        <i data-feather="pie-chart" class="text-fuchsia-400 w-6 h-6"></i>
+                        <h3 class="text-xl font-bold text-fuchsia-400">Best Selling Products</h3>
                     </div>
-                    <canvas id="salesChart"></canvas>
+                    <div class="relative" style="height: 360px;">
+                        <canvas id="salesChart"></canvas>
+                    </div>
                 </div>
             </div>
 
             <!-- Recent Activity -->
-            <div class="bg-gray-800 rounded-xl p-6 shadow-lg">
-                <h3 class="text-xl font-bold mb-4 text-lime-400">Recent Activity</h3>
-                <ul class="space-y-4">
-                    <?php foreach($recentActivities as $act): ?>
-                    <li class="flex justify-between items-start bg-gray-700 p-3 rounded-lg">
-                        <!-- Icon Circle -->
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-600 text-xl">
-                                <?= $iconMap[$act['type']] ?? '⚪' ?>
+            <div class="bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-700">
+                <div class="flex items-center space-x-2 mb-6">
+                    <i data-feather="activity" class="text-lime-400 w-6 h-6"></i>
+                    <h3 class="text-xl font-bold text-lime-400">Recent Activity</h3>
+                </div>
+                <div class="space-y-3">
+                    <?php foreach($recentActivities as $act): 
+                        // Parse meta data if it's JSON
+                        $metaData = null;
+                        if ($act['meta']) {
+                            $decoded = json_decode($act['meta'], true);
+                            if ($decoded) {
+                                $metaData = $decoded;
+                            }
+                        }
+                        
+                        // Determine icon and colors based on type
+                        $iconConfig = [
+                            'product_sold' => ['icon' => 'shopping-cart', 'bg' => 'bg-green-500', 'text' => 'text-green-400'],
+                            'product_made' => ['icon' => 'package', 'bg' => 'bg-blue-500', 'text' => 'text-blue-400'],
+                            'raw_material' => ['icon' => 'box', 'bg' => 'bg-yellow-500', 'text' => 'text-yellow-400'],
+                            'sale' => ['icon' => 'dollar-sign', 'bg' => 'bg-lime-500', 'text' => 'text-lime-400'],
+                            'production' => ['icon' => 'settings', 'bg' => 'bg-fuchsia-500', 'text' => 'text-fuchsia-400'],
+                            'over_usage' => ['icon' => 'alert-triangle', 'bg' => 'bg-red-500', 'text' => 'text-red-400'],
+                            'special' => ['icon' => 'star', 'bg' => 'bg-purple-500', 'text' => 'text-purple-400']
+                        ];
+                        $config = $iconConfig[$act['type']] ?? ['icon' => 'circle', 'bg' => 'bg-gray-500', 'text' => 'text-gray-400'];
+                    ?>
+                    <div class="flex items-center justify-between bg-gradient-to-r from-gray-700 to-gray-750 p-4 rounded-lg border border-gray-600 hover:border-lime-500 transition-all">
+                        <div class="flex items-center gap-4 flex-1">
+                            <!-- Icon -->
+                            <div class="w-12 h-12 flex items-center justify-center rounded-full <?= $config['bg'] ?> shadow-lg">
+                                <i data-feather="<?= $config['icon'] ?>" class="w-6 h-6 text-white"></i>
                             </div>
-                            <div>
-                                <p class="font-semibold text-gray-200">
+                            
+                            <!-- Content -->
+                            <div class="flex-1">
+                                <p class="font-semibold text-white text-sm">
                                     <?= htmlspecialchars($act['action']) ?>
-                                    <?php if($act['meta']): ?>
-                                        - <?= htmlspecialchars($act['meta']) ?>
-                                    <?php endif; ?>
                                 </p>
-                                <p class="text-gray-400 text-sm"><?= date('g:i a, M d', strtotime($act['created_at'])) ?></p>
+                                <?php if ($metaData): ?>
+                                    <div class="flex flex-wrap gap-2 mt-1">
+                                        <?php if (isset($metaData['product_id'])): ?>
+                                            <span class="text-xs px-2 py-1 bg-gray-600 rounded text-gray-300">
+                                                <?php
+                                                $stmt = $conn->prepare("SELECT name, sku FROM products WHERE id = :id");
+                                                $stmt->execute(['id' => $metaData['product_id']]);
+                                                $product = $stmt->fetch(PDO::FETCH_ASSOC);
+                                                ?>
+                                                <i data-feather="tag" class="w-3 h-3 inline"></i> <?= htmlspecialchars($product['name']) ?> (<?= htmlspecialchars($product['sku']) ?>)
+                                            </span>
+                                        <?php endif; ?>
+                                        <?php if (isset($metaData['qty'])): ?>
+                                            <span class="text-xs px-2 py-1 bg-gray-600 rounded text-gray-300">
+                                                <i data-feather="package" class="w-3 h-3 inline"></i> Qty: <?= $metaData['qty'] ?>
+                                            </span>
+                                        <?php endif; ?>
+                                        <?php if (isset($metaData['total'])): ?>
+                                            <span class="text-xs px-2 py-1 bg-lime-600 rounded text-white font-semibold">
+                                                <i data-feather="dollar-sign" class="w-3 h-3 inline"></i> <?= number_format($metaData['total']) ?> Frw
+                                            </span>
+                                        <?php endif; ?>
+                                    </div>
+                                <?php elseif ($act['meta']): ?>
+                                    <p class="text-gray-400 text-xs mt-1"><?= htmlspecialchars($act['meta']) ?></p>
+                                <?php endif; ?>
+                                <p class="text-gray-500 text-xs mt-1">
+                                    <i data-feather="clock" class="w-3 h-3 inline"></i> <?= date('g:i a, M d, Y', strtotime($act['created_at'])) ?>
+                                </p>
                             </div>
                         </div>
 
-                        <!-- Amount or quantity -->
-                        <div class="text-green-400 font-bold">
-                            <?= $act['amount'] ?? ($act['quantity_change'] > 0 ? "+":"") . $act['quantity_change'] ?? '' ?>
+                        <!-- Amount/Quantity Badge -->
+                        <div class="flex flex-col items-end gap-1">
+                            <?php if ($act['amount']): ?>
+                                <span class="text-lime-400 font-bold text-lg">
+                                    <?= number_format($act['amount']) ?> Frw
+                                </span>
+                            <?php endif; ?>
+                            <?php if ($act['quantity_change']): ?>
+                                <span class="<?= $act['quantity_change'] > 0 ? 'text-green-400' : 'text-red-400' ?> font-semibold text-sm">
+                                    <?= $act['quantity_change'] > 0 ? '+' : '' ?><?= $act['quantity_change'] ?>
+                                </span>
+                            <?php endif; ?>
                         </div>
-                    </li>
+                    </div>
                     <?php endforeach; ?>
-                </ul>
+                    
+                    <?php if (empty($recentActivities)): ?>
+                        <div class="text-center py-8 text-gray-500">
+                            <i data-feather="inbox" class="w-16 h-16 mx-auto mb-3 opacity-50"></i>
+                            <p>No recent activities</p>
+                        </div>
+                    <?php endif; ?>
+                </div>
             </div>
 
 
@@ -149,61 +227,89 @@
 
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // All product sales data from PHP
-        const allProductData = {
-            daily: <?= json_encode($productSalesDaily) ?>,
-            weekly: <?= json_encode($productSalesWeekly) ?>,
-            monthly: <?= json_encode($productSalesMonthly) ?>,
-            yearly: <?= json_encode($productSalesYearly) ?>
-        };
+    // Product sales data for all time periods (donut chart)
+    const productSalesData = {
+        daily: <?= json_encode($productSalesDaily) ?>,
+        weekly: <?= json_encode($productSalesWeekly) ?>,
+        monthly: <?= json_encode($productSalesMonthly) ?>,
+        yearly: <?= json_encode($productSalesYearly) ?>
+    };
 
-        // Initial chart (monthly)
-        const salesCtx = document.getElementById('salesChart').getContext('2d');
-        let salesChart = new Chart(salesCtx, {
-            type: 'doughnut',
-            data: {
-                labels: allProductData.monthly.labels,
-                datasets: [{
-                    data: allProductData.monthly.sales,
-                    backgroundColor: ['#83cc16c9', '#d846efd8', '#3b83f6d7', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#f97316'],
-                    borderWidth: 0,
-                    hoverOffset: 30,
-                    spacing: 10,
-                    cutout: '30%',
-                    borderRadius: 5,
-                }]
+    // Initialize donut chart
+    const salesCanvas = document.getElementById('salesChart');
+    salesCanvas.style.width = '100%';
+    salesCanvas.style.height = '100%';
+    const salesCtx = salesCanvas.getContext('2d');
+    
+    let salesChart = new Chart(salesCtx, {
+        type: 'doughnut',
+        data: {
+            labels: productSalesData.daily.labels,
+            datasets: [{
+                data: productSalesData.daily.sales,
+                backgroundColor: [
+                    '#84cc16',
+                    '#d946ef',
+                    '#3b82f6',
+                    '#f59e0b',
+                    '#ef4444',
+                    '#8b5cf6',
+                    '#14b8a6',
+                    '#f97316'
+                ],
+                borderWidth: 2,
+                borderColor: '#1f2937',
+                hoverOffset: 20,
+                spacing: 2,
+                cutout: '60%',
+                borderRadius: 8,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            layout: {
+                padding: {
+                    top: 10,
+                    bottom: 10
+                }
             },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: { color: '#9ca3af', padding: 20 }
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { 
+                        color: '#9ca3af', 
+                        padding: 12,
+                        font: {
+                            size: 11
+                        },
+                        usePointStyle: true,
+                        pointStyle: 'circle',
+                        boxWidth: 8,
+                        boxHeight: 8
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    padding: 12,
+                    titleFont: {
+                        size: 14
+                    },
+                    bodyFont: {
+                        size: 13
+                    },
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.label || '';
+                            let value = context.parsed || 0;
+                            let total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            let percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                            return label + ': ' + value.toFixed(0) + ' Frw (' + percentage + '%)';
+                        }
                     }
                 }
             }
-        });
-
-        // Handle product range buttons
-        document.querySelectorAll('.product-range-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                // Remove active state from all buttons
-                document.querySelectorAll('.product-range-btn').forEach(b => {
-                    b.classList.remove('bg-lime-500', 'hover:bg-lime-600');
-                    b.classList.add('bg-gray-700', 'hover:bg-gray-600');
-                });
-                
-                // Add active state to clicked button
-                this.classList.remove('bg-gray-700', 'hover:bg-gray-600');
-                this.classList.add('bg-lime-500', 'hover:bg-lime-600');
-
-                const range = this.dataset.range;
-                salesChart.data.labels = allProductData[range].labels;
-                salesChart.data.datasets[0].data = allProductData[range].sales;
-                salesChart.update();
-            });
-        });
+        }
     });
 </script>
 <script>
@@ -277,23 +383,30 @@
             }
         });
 
-        // Handle range buttons
+        // Handle range buttons - update BOTH charts
         document.querySelectorAll('.range-btn').forEach(btn => {
             btn.addEventListener('click', function() {
+                const range = this.dataset.range;
+                
                 // Remove active state from all buttons
                 document.querySelectorAll('.range-btn').forEach(b => {
-                    b.classList.remove('bg-lime-500', 'hover:bg-lime-600');
-                    b.classList.add('bg-gray-700', 'hover:bg-gray-600');
+                    b.classList.remove('bg-lime-500', 'bg-lime-600');
+                    b.classList.add('bg-gray-700');
                 });
                 
                 // Add active state to clicked button
-                this.classList.remove('bg-gray-700', 'hover:bg-gray-600');
-                this.classList.add('bg-lime-500', 'hover:bg-lime-600');
-
-                const range = this.dataset.range;
+                this.classList.remove('bg-gray-700');
+                this.classList.add('bg-lime-500');
+                
+                // Update revenue chart (line chart)
                 revenueChart.data.labels = allData[range].labels;
                 revenueChart.data.datasets[0].data = allData[range].data;
-                revenueChart.update();
+                revenueChart.update('active');
+                
+                // Update sales chart (donut chart)
+                salesChart.data.labels = productSalesData[range].labels;
+                salesChart.data.datasets[0].data = productSalesData[range].sales;
+                salesChart.update('active');
             });
         });
     });

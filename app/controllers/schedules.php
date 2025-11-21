@@ -410,6 +410,75 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
+    // Automatically generate a week schedule: each active employee gets
+    // one random day off in the week, and a default morning shift on
+    // the other days (if they do not already have a shift that day).
+    if (isset($_POST['action']) && $_POST['action'] === 'auto_generate_week') {
+        try {
+            $target_date = $_POST['date'] ?? $current_date;
+
+            // Compute week start/end based on target date
+            $curr_week_start = date('Y-m-d', strtotime('monday this week', strtotime($target_date)));
+            $curr_week_end = date('Y-m-d', strtotime('sunday this week', strtotime($target_date)));
+
+            // Fetch all active employees
+            $empStmt = $conn->query("SELECT id FROM employees WHERE status = 'Active'");
+            $empRows = $empStmt->fetchAll(PDO::FETCH_ASSOC);
+
+            if (!$empRows) {
+                $_SESSION['error'] = 'No active employees to schedule.';
+                header("Location: ?page=schedules&view=$view_type&date=$current_date");
+                exit;
+            }
+
+            $created = 0;
+
+            foreach ($empRows as $emp) {
+                $employee_id = $emp['id'];
+
+                // Pick one random day index (0-6) within the current week as day off
+                $off_index = mt_rand(0, 6);
+
+                for ($i = 0; $i < 7; $i++) {
+                    $day_date = date('Y-m-d', strtotime($curr_week_start . " +{$i} days"));
+
+                    // Skip the off day
+                    if ($i === $off_index) {
+                        continue;
+                    }
+
+                    // Skip if a shift already exists for this employee on this date
+                    $check = $conn->prepare("SELECT COUNT(*) FROM schedules WHERE assigned_to = ? AND DATE(start_time) = ? AND schedule_type = 'shift'");
+                    $check->execute([$employee_id, $day_date]);
+                    if ($check->fetchColumn() > 0) {
+                        continue;
+                    }
+
+                    // Create a default morning shift (6AM-2PM)
+                    $shift_data = [
+                        'shift_type' => 'morning',
+                        'start_time' => $day_date . ' 06:00:00',
+                        'end_time' => $day_date . ' 14:00:00',
+                        'description' => 'Auto-generated morning shift'
+                    ];
+
+                    $shift_id = $scheduleManager->createShiftSchedule($employee_id, $shift_data);
+                    if ($shift_id) {
+                        $created++;
+                    }
+                }
+            }
+
+            $_SESSION['message'] = "Auto-generated {$created} shifts for the selected week.";
+        } catch (Exception $e) {
+            error_log('Auto-generate week error: ' . $e->getMessage());
+            $_SESSION['error'] = 'Failed to auto-generate week schedule.';
+        }
+
+        header("Location: ?page=schedules&view=$view_type&date=$current_date");
+        exit;
+    }
+
     // Handle creating a time off request
     if (isset($_POST['action']) && $_POST['action'] === 'create_time_off_request') {
         $employee_id = $_POST['employee_id'] ?? null;

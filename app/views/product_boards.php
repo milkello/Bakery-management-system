@@ -31,7 +31,6 @@
                 <?php if($isAdmin): ?>
                 <button data-product="<?= $pid ?>" data-plan='<?= $planJson ?>' class="openPlanBtn bg-lime-500 px-3 py-1 rounded text-sm">Plan Ingredients</button>
                 <?php endif; ?>
-                <button data-product="<?= $pid ?>" data-stat='<?= $statJson ?>' data-price="<?= htmlspecialchars($product['price'] ?? 0) ?>" class="openRecordBtn bg-fuchsia-500 px-3 py-1 rounded text-sm">Record Prod/Sales</button>
             </div>
         </div>
 
@@ -47,9 +46,9 @@
                         $it = $items->fetchAll(PDO::FETCH_ASSOC);
                     ?>
                     <div class="bg-gray-700 p-2 rounded my-2">
-                        <div class="text-sm text-gray-300">Plan #<?= $pl['order_id'] ?> • Value: <?= number_format($pl['total_value'],2) ?></div>
+                        <div class="text-sm text-gray-300">Plan #<?= $pl['order_id'] ?> • Value: <?= number_format($pl['total_value'],0) ?></div>
                         <?php foreach($it as $ii): ?>
-                            <div class="text-sm text-gray-400">- <?= htmlspecialchars($ii['name']) ?>: <?= number_format($ii['qty'],3) ?> <?= htmlspecialchars($ii['unit']) ?></div>
+                            <div class="text-sm text-gray-400">- <?= htmlspecialchars($ii['name']) ?>: <?= number_format($ii['qty'],0) ?> <?= htmlspecialchars($ii['unit']) ?></div>
                         <?php endforeach; ?>
                     </div>
                 <?php endforeach; ?>
@@ -58,17 +57,27 @@
 
         <div class="mt-3 border-t border-gray-700 pt-3">
             <h4 class="text-sm text-gray-400">Today's stats</h4>
-            <div class="grid grid-cols-3 gap-2 mt-2 text-center">
+            <?php if (!empty($stat['plan_value'])): ?>
+                <p class="text-gray-400">
+                    <!-- display loss or profit and difference) due to comparison between plan and production: -->
+                    Estimation: <span class="text-fuchsia-400 font-semibold"><?= number_format($stat['plan_value']) > number_format($stat['product_value']) ? 'Profit of' : 'Loss of ' ?><?= number_format($stat['plan_value'] - $stat['product_value'], ) ?></span>
+                </p>
+            <?php endif; ?>
+            <div class="grid grid-cols-4 gap-2 mt-2 text-center">
                 <div>
                     <div class="text-gray-300 font-semibold"><?= intval($stat['produced'] ?? 0) ?></div>
                     <div class="text-gray-400 text-xs">Produced</div>
+                </div>
+                <div>
+                    <div class="text-gray-300 font-semibold"><?= number_format($stat['product_value'], 0) ?></div>
+                    <div class="text-gray-400 text-xs">Value</div>
                 </div>
                 <div>
                     <div class="text-gray-300 font-semibold"><?= intval($stat['sold'] ?? 0) ?></div>
                     <div class="text-gray-400 text-xs">Sold</div>
                 </div>
                 <div>
-                    <div class="text-gray-300 font-semibold"><?= number_format($stat['revenue'] ?? 0,2) ?></div>
+                    <div class="text-gray-300 font-semibold"><?= number_format($stat['revenue'] ?? 0,0) ?></div>
                     <div class="text-gray-400 text-xs">Revenue</div>
                 </div>
             </div>
@@ -113,82 +122,90 @@
     </div>
 </div>
 
-<!-- Record modal -->
-<div id="recordModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-    <div class="bg-gray-800 rounded-xl p-6 w-full max-w-md mx-4">
-        <div class="flex justify-between items-center mb-4">
-            <h3 class="text-xl font-bold text-fuchsia-400">Record Production & Sales</h3>
-            <button id="closeRecordModal" class="text-gray-400"><i data-feather="x" class="w-6 h-6"></i></button>
-        </div>
-        <form id="recordForm" method="POST">
-            <input type="hidden" name="csrf" value="<?= htmlspecialchars($_SESSION['csrf']) ?>">
-            <input type="hidden" name="action" value="record_stats">
-            <input type="hidden" name="product_id" id="recordProductId">
-            <div class="grid grid-cols-1 gap-3">
-                <label class="text-gray-400 text-sm">Date</label>
-                <input type="date" name="stat_date" value="<?= date('Y-m-d') ?>" class="w-full bg-gray-700 text-white px-3 py-2 rounded" />
-                <label class="text-gray-400 text-sm">Produced</label>
-                <input id="recordProduced" type="number" name="produced" min="0" class="w-full bg-gray-700 text-white px-3 py-2 rounded" />
-                <label class="text-gray-400 text-sm">Sold</label>
-                <input id="recordSold" type="number" name="sold" min="0" class="w-full bg-gray-700 text-white px-3 py-2 rounded" />
-                <label class="text-gray-400 text-sm">Revenue</label>
-                <input id="recordRevenue" type="number" name="revenue" step="0.01" class="w-full bg-gray-700 text-white px-3 py-2 rounded" readonly />
-            </div>
-            <div class="mt-4 flex justify-end space-x-3">
-                <button type="button" id="recordCancel" class="bg-gray-600 text-white px-4 py-2 rounded">Cancel</button>
-                <button type="submit" class="bg-fuchsia-500 text-white px-4 py-2 rounded">Save</button>
-            </div>
-        </form>
-    </div>
-</div>
+<!-- Production and Sales are now handled via their respective pages -->
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     const openPlanBtns = document.querySelectorAll('.openPlanBtn');
-    const openRecordBtns = document.querySelectorAll('.openRecordBtn');
     const planModal = document.getElementById('planModal');
-    const recordModal = document.getElementById('recordModal');
     const closePlan = document.getElementById('closePlanModal');
-    const closeRecord = document.getElementById('closeRecordModal');
     const planCancel = document.getElementById('planCancel');
-    const recordCancel = document.getElementById('recordCancel');
     const planItems = document.getElementById('planItems');
     const planAddRow = document.getElementById('planAddRow');
     const planProductId = document.getElementById('planProductId');
-    const recordProductId = document.getElementById('recordProductId');
 
     function createPlanRow(item = null) {
         const div = document.createElement('div');
-        div.className = 'grid grid-cols-3 gap-2';
+        div.className = 'space-y-1';
+
         const materialsOptions = `
             <?php foreach($conn->query('SELECT id,name,unit,stock_quantity FROM raw_materials ORDER BY name')->fetchAll(PDO::FETCH_ASSOC) as $m): ?>
-                <option value="<?= $m['id'] ?>" data-stock="<?= htmlspecialchars($m['stock_quantity']) ?>"><?= htmlspecialchars($m['name']) ?> (<?= htmlspecialchars($m['unit']) ?>, avail: <?= number_format($m['stock_quantity'],3) ?>)</option>
+                <option value="<?= $m['id'] ?>" data-stock="<?= htmlspecialchars($m['stock_quantity']) ?>"><?= htmlspecialchars($m['name']) ?> (<?= htmlspecialchars($m['unit']) ?>, avail: <?= number_format($m['stock_quantity'],0) ?>)</option>
             <?php endforeach; ?>
         `;
+
         div.innerHTML = `
-            <select name="material_id[]" class="bg-gray-700 text-white px-3 py-2 rounded">${materialsOptions}</select>
-            <input name="qty[]" type="number" step="0.001" placeholder="qty" class="bg-gray-700 text-white px-3 py-2 rounded" required />
-            <input name="unit_price[]" type="number" step="0.0001" placeholder="unit price" class="bg-gray-700 text-white px-3 py-2 rounded" required />
+            <div class="ingredient-row grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
+                <div class="md:col-span-5">
+                    <label class="block text-gray-400 text-sm mb-2">Material</label>
+                    <select name="material_id[]" 
+                            class="w-full bg-gray-700 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-lime-500">
+                        <option value="">Select material...</option>
+                        ${materialsOptions}
+                    </select>
+                </div>
+                <div class="md:col-span-3">
+                    <label class="block text-gray-400 text-sm mb-2">Quantity</label>
+                    <input type="number" name="qty[]" placeholder="0.000"
+                           class="w-full bg-gray-700 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-lime-500" required>
+                </div>
+                <div class="md:col-span-3">
+                    <label class="block text-gray-400 text-sm mb-2">Unit Price</label>
+                    <input type="number" name="unit_price[]" placeholder="0.0000"
+                           class="w-full bg-gray-700 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-lime-500" required>
+                </div>
+                <div class="md:col-span-1 flex md:justify-end">
+                    <button type="button"
+                            class="removePlanRow w-full md:w-auto inline-flex items-center justify-center bg-gray-700/40 hover:bg-gray-700 text-fuchsia-400 hover:text-fuchsia-300 px-3 py-2 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-fuchsia-500"
+                            title="Remove" aria-label="Remove">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+                            <path d="M10 11v6"></path>
+                            <path d="M14 11v6"></path>
+                            <path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"></path>
+                        </svg>
+                        <span class="sr-only">Remove</span>
+                    </button>
+                </div>
+            </div>
         `;
-        // add a small warning area under the row
+
         const warn = document.createElement('div');
-        warn.className = 'ingredient-warning text-sm text-red-400 mt-1 hidden';
+        warn.className = 'ingredient-warning text-sm text-pink-400 mt-1 hidden';
         div.appendChild(warn);
-    // if item provided, set values after attaching
-    planItems.appendChild(div);
-    // attach listeners for availability checks
-    const selEl = div.querySelector('select');
-    const qtyEl = div.querySelector('input[name="qty[]"]');
-    if (selEl) selEl.addEventListener('change', () => checkRowAvailability(div));
-    if (qtyEl) qtyEl.addEventListener('input', () => checkRowAvailability(div));
+
+        planItems.appendChild(div);
+
+        const selEl = div.querySelector('select[name="material_id[]"]');
+        const qtyEl = div.querySelector('input[name="qty[]"]');
+        const removeBtn = div.querySelector('.removePlanRow');
+
+        if (removeBtn) {
+            removeBtn.addEventListener('click', () => {
+                div.remove();
+            });
+        }
+        if (selEl) selEl.addEventListener('change', () => checkRowAvailability(div));
+        if (qtyEl) qtyEl.addEventListener('input', () => checkRowAvailability(div));
+
         if (item) {
-            const sel = div.querySelector('select');
-            const qty = div.querySelector('input[name="qty[]"]');
+            const sel = selEl;
+            const qty = qtyEl;
             const up = div.querySelector('input[name="unit_price[]"]');
-            sel.value = item.material_id;
-            qty.value = item.qty;
-            up.value = item.unit_price;
-            // run availability check for prefilled item
+            if (sel) sel.value = item.material_id;
+            if (qty) qty.value = item.qty;
+            if (up) up.value = item.unit_price;
             checkRowAvailability(div);
         }
     }
@@ -235,44 +252,8 @@ document.addEventListener('DOMContentLoaded', () => {
         planModal.classList.remove('hidden');
     }));
 
-    openRecordBtns.forEach(b => b.addEventListener('click', (e) => {
-        const btn = e.currentTarget;
-        const pid = btn.getAttribute('data-product');
-        const statData = btn.getAttribute('data-stat');
-        const price = parseFloat(btn.getAttribute('data-price') || '0');
-        recordProductId.value = pid;
-        // attach price to modal for live calc
-        recordModal.dataset.price = price;
-        // prefill form
-        try {
-            const parsed = statData ? JSON.parse(statData) : {};
-            document.querySelector('#recordForm input[name="stat_date"]').value = parsed.stat_date || new Date().toISOString().slice(0,10);
-            document.querySelector('#recordForm input[name="produced"]').value = parsed.produced || '';
-            document.querySelector('#recordForm input[name="sold"]').value = parsed.sold || '';
-            // compute revenue from price and sold (if any)
-            const soldVal = parsed.sold ? Number(parsed.sold) : 0;
-            document.querySelector('#recordForm input[name="revenue"]').value = (Math.round(soldVal * price * 100) / 100).toFixed(2);
-        } catch (err) {
-            // ignore
-            document.querySelector('#recordForm input[name="revenue"]').value = '0.00';
-        }
-        recordModal.classList.remove('hidden');
-    }));
-
     closePlan.addEventListener('click', () => planModal.classList.add('hidden'));
     planCancel.addEventListener('click', () => planModal.classList.add('hidden'));
-    closeRecord.addEventListener('click', () => recordModal.classList.add('hidden'));
-    recordCancel.addEventListener('click', () => recordModal.classList.add('hidden'));
-    // live calculate revenue when sold changes
-    const recordSoldInput = document.querySelector('#recordForm input[name="sold"]');
-    if (recordSoldInput) {
-        recordSoldInput.addEventListener('input', function () {
-            const price = parseFloat(recordModal.dataset.price || '0');
-            const sold = parseFloat(this.value || '0');
-            const rev = Math.round(sold * price * 100) / 100;
-            document.querySelector('#recordForm input[name="revenue"]').value = rev.toFixed(2);
-        });
-    }
 
     if (typeof feather !== 'undefined') feather.replace();
 });
