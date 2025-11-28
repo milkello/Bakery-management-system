@@ -13,10 +13,10 @@
                 <div class="bg-gray-800 rounded-xl p-6 shadow-lg border-l-4 border-fuchsia-500">
                     <div class="flex justify-between items-start">
                         <div>
-                            <p class="text-gray-400">Products In Stock</p>
-                            <h3 class="text-2xl font-bold text-fuchsia-400"><?= $toal_stock ?></h3>
-                            <!-- <h3 class="text-2xl font-bold text-fuchsia-400"><?= $total_products ?></h3> -->
-                            <p class="text-green-400 text-sm"><?= number_format($today_production) ?> products made today</p>
+                            <p class="text-gray-400">Products Value</p>
+                            <h3 class="text-2xl font-bold text-fuchsia-400"><?= number_format($total_value,0) ?> Frw</h3>
+                            <p class="text-green-400 text-sm"><?= number_format($daily_total_revenue) ?> Frw of today</p>
+                            
                         </div>
                         <i data-feather="shopping-cart" class="text-fuchsia-500 w-8 h-8"></i>
                     </div>
@@ -24,9 +24,10 @@
                 <div class="bg-gray-800 rounded-xl p-6 shadow-lg border-l-4 border-lime-500">
                     <div class="flex justify-between items-start">
                         <div>
-                            <p class="text-gray-400">Ingredients In stock</p>
-                            <h3 class="text-2xl font-bold text-lime-400"><?= $raw_materials ?> types</h3>
-                            <p class="text-green-400 text-sm"><?= number_format($pdo->query('SELECT SUM(unit_cost * stock_quantity) FROM raw_materials')->fetchColumn() ?: 0, 0) ?> Frw stock value</p>
+                            <p class="text-gray-400">Stock Value</p>
+                            <!-- <h3 class="text-2xl font-bold text-green-400"><?= $raw_materials ?> types</h3> -->
+                            <h3 class="text-2xl font-bold text-lime-400"><?= number_format($pdo->query('SELECT SUM(unit_cost * stock_quantity) FROM raw_materials')->fetchColumn() ?: 0, 0) ?> Frw</h3>
+                            <p class="text-green-400 text-sm"><?= number_format($daily_total_value_used, 0) ?> Frw used today</p>
                             <p class="text-red-400 text-sm"><?= $low_stock_count == '0' ? 'No' : $low_stock_count ?> low stock products</p>
                         </div>
                         <i data-feather="package" class="text-lime-500 w-8 h-8"></i>

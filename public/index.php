@@ -17,7 +17,7 @@ $logged_in = isset($_SESSION['user_id']);
 $user_role = $_SESSION['role'] ?? 'employee';
 
 // Define allowed pages for each role
-$admin_only_pages = ['dashboard','employees','employee_create','raw_materials','products','schedules','admin_reports','reports','material_orders'];
+$admin_only_pages = ['dashboard','employees','employee_create','raw_materials','products','schedules','admin_reports','reports','material_orders','suppliers','supplier_trips'];
 $employee_pages = ['product_boards','production','sales','employee_reports','customers'];
 $common_pages = ['notifications','profile','change_password','logout','exports_pdf','export_page_pdf','exports_csv','quick_csv_export','export_schedule','settings'];
 $public_pages = ['home','login'];

@@ -30,6 +30,21 @@
         
         <form method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="md:col-span-2">
+                <label class="block text-gray-400 text-sm mb-2">Supplied By (Optional)</label>
+                <select name="supplied_by" 
+                        class="w-full bg-gray-700 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-lime-500">
+                    <option value="">-- No Supplier / Direct Sale --</option>
+                    <?php if (!empty($suppliers)): ?>
+                        <?php foreach ($suppliers as $supplier): ?>
+                            <option value="<?= htmlspecialchars($supplier['id']) ?>">
+                                <?= htmlspecialchars($supplier['name']) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </select>
+            </div>
+
+            <div class="md:col-span-2">
                 <label class="block text-gray-400 text-sm mb-2">Select Product</label>
                 <select name="product_id" required 
                         class="w-full bg-gray-700 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-lime-500">

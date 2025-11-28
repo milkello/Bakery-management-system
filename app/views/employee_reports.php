@@ -103,7 +103,7 @@
                         <input type="date" name="date_to" required 
                                value="<?= date('Y-m-d') ?>"
                                max="<?= date('Y-m-d') ?>"
-                               onchange="validateDateRange(document.querySelector('input[name="date_from"]').value, this.value)"
+                               onchange="validateDateRange(document.querySelector('input[name=\'date_from\']').value, this.value)"
                                class="w-full bg-gray-700 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-fuchsia-500">
                     </div>
                 </div>
@@ -123,21 +123,25 @@
                 <div>
                     <label class="block text-gray-400 text-sm mb-2">Quick Select</label>
                     <div class="grid grid-cols-2 gap-2">
-                        <button type="button" onclick="setDateRange(7)" 
+                        <button type="button" onclick="setQuickRange('today')" 
+                                class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded-lg text-sm transition-colors">
+                            Today
+                        </button>
+                        <button type="button" onclick="setQuickRange('week')" 
+                                class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded-lg text-sm transition-colors">
+                            This Week
+                        </button>
+                        <button type="button" onclick="setQuickRange('month')" 
+                                class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded-lg text-sm transition-colors">
+                            This Month
+                        </button>
+                        <button type="button" onclick="setQuickRange('last7')" 
                                 class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded-lg text-sm transition-colors">
                             Last 7 Days
                         </button>
-                        <button type="button" onclick="setDateRange(30)" 
+                        <button type="button" onclick="setQuickRange('last30')" 
                                 class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded-lg text-sm transition-colors">
                             Last 30 Days
-                        </button>
-                        <button type="button" onclick="setDateRange(90)" 
-                                class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded-lg text-sm transition-colors">
-                            Last 90 Days
-                        </button>
-                        <button type="button" onclick="setDateRange(180)" 
-                                class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded-lg text-sm transition-colors">
-                            Last 6 Months
                         </button>
                     </div>
                 </div>
@@ -221,13 +225,43 @@
 </div>
 
 <script>
-function setDateRange(days) {
+function formatDateInput(d) {
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+function setQuickRange(range) {
     const today = new Date();
-    const fromDate = new Date(today);
-    fromDate.setDate(today.getDate() - days);
-    
-    document.querySelector('input[name="date_from"]').value = fromDate.toISOString().split('T')[0];
-    document.querySelector('input[name="date_to"]').value = today.toISOString().split('T')[0];
+    let start = new Date(today);
+    let end = new Date(today);
+
+    if (range === 'today') {
+        // start and end already today
+    } else if (range === 'week') {
+        const day = today.getDay();
+        const diffToMonday = (day === 0 ? -6 : 1 - day);
+        start = new Date(today);
+        start.setDate(today.getDate() + diffToMonday);
+        end = new Date(start);
+        end.setDate(start.getDate() + 6);
+    } else if (range === 'month') {
+        start = new Date(today.getFullYear(), today.getMonth(), 1);
+        end = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    } else if (range === 'last7') {
+        start = new Date(today);
+        start.setDate(today.getDate() - 6);
+    } else if (range === 'last30') {
+        start = new Date(today);
+        start.setDate(today.getDate() - 29);
+    }
+
+    const fromStr = formatDateInput(start);
+    const toStr = formatDateInput(end);
+
+    document.querySelector('input[name="date_from"]').value = fromStr;
+    document.querySelector('input[name="date_to"]').value = toStr;
 }
 
 function validateReportForm() {

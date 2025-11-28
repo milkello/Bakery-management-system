@@ -134,37 +134,63 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && check_csrf($_POST['csrf'] ?? '')) {
 $products = $conn->query('SELECT id, name, sku, unit, COALESCE(stock,0) as stock, COALESCE(price,0) as price FROM products ORDER BY name')->fetchAll(PDO::FETCH_ASSOC);
 $total_products = $conn->query("SELECT COUNT(*) FROM products")->fetchColumn();
 
+// Daily totals for stats cards
+$daily_total_value_used = 0;
+$stmt = $conn->prepare('
+    SELECT product_id, SUM(total_value) as total_value
+    FROM product_material_plans
+    JOIN material_orders ON material_orders.id = product_material_plans.order_id
+    WHERE product_material_plans.plan_date = CURDATE()
+    GROUP BY product_id
+');
+$stmt->execute();
+$plans = $stmt->fetchAll(PDO::FETCH_ASSOC);
+foreach ($plans as $p) {
+    $pid = $p['product_id'];
+    $daily_total_value_used += (float)($p['total_value'] ?? 0);
+}
+
 // For quick display, load today's plans and stats into maps
 $today = date('Y-m-d');
-$plansStmt = $conn->prepare('SELECT pmp.*, mo.total_value FROM product_material_plans pmp JOIN material_orders mo ON mo.id = pmp.order_id WHERE pmp.plan_date = ?');
-$plansStmt->execute([$today]);
+$plansStmt = $conn->prepare('SELECT pmp.*, mo.total_value FROM product_material_plans pmp JOIN material_orders mo ON mo.id = pmp.order_id WHERE pmp.plan_date = CURDATE()');
+$plansStmt->execute();
 $plans = $plansStmt->fetchAll(PDO::FETCH_ASSOC);
 $plansByProduct = [];
 foreach ($plans as $p) { $plansByProduct[$p['product_id']][] = $p; }
 
 // Fetch today's production data from production table
 $productionStmt = $conn->prepare('
-    SELECT product_id, SUM(quantity_produced) as produced
+    SELECT product_id, SUM(quantity_produced) as produced, (SELECT COALESCE(price,0) FROM products WHERE id = product_id) as price
     FROM production
-    WHERE DATE(created_at) = ?
+    WHERE DATE(created_at) = CURDATE()
     GROUP BY product_id
 ');
-$productionStmt->execute([$today]);
+$productionStmt->execute();
 $productionData = $productionStmt->fetchAll(PDO::FETCH_ASSOC);
 $productionByProduct = [];
-foreach ($productionData as $pd) { $productionByProduct[$pd['product_id']] = $pd; }
+$daily_total_produced = 0;
+$daily_total_revenue = 0;
+foreach ($productionData as $pd) {
+    $productionByProduct[$pd['product_id']] = $pd;
+    $daily_total_produced += (int)($pd['produced'] ?? 0);
+    $daily_total_revenue += (float)($pd['produced'] ?? 0) * ($pd['price'] ?? 0);
+}
 
 // Fetch today's sales data from sales table
 $salesStmt = $conn->prepare('
-    SELECT product_id, SUM(qty) as sold, SUM(total_price) as revenue
+    SELECT product_id, SUM(total_price) as revenue
     FROM sales
-    WHERE DATE(created_at) = ?
+    WHERE DATE(created_at) = CURDATE()
     GROUP BY product_id
 ');
-$salesStmt->execute([$today]);
+$salesStmt->execute();
 $salesData = $salesStmt->fetchAll(PDO::FETCH_ASSOC);
 $salesByProduct = [];
-foreach ($salesData as $sd) { $salesByProduct[$sd['product_id']] = $sd; }
+$daily_total_revenue_used = 0;
+foreach ($salesData as $sd) {
+    $salesByProduct[$sd['product_id']] = $sd;
+    $daily_total_revenue_used += (float)($sd['revenue'] ?? 0);
+}
 
 // Combine production and sales data into stats format for display
 $statsByProduct = [];

@@ -1,6 +1,30 @@
 <?php
 // Product boards view: shows product cards where admin can plan ingredients and staff can record production/sales
 ?>
+<div class="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div class="bg-gray-800 rounded-xl p-4 shadow-lg border-l-4 border-lime-500 flex items-center justify-between">
+        <div>
+            <p class="text-gray-400 text-sm">Value Of Ingredients Used</p>
+            <p class="text-2xl font-bold text-lime-400 mt-1"><?= number_format($daily_total_value_used ?? 0, 0) ?> <span class="text-sm">RWF</span></p>
+        </div>
+        <i data-feather="box" class="w-8 h-8 text-lime-400"></i>
+    </div>
+    <div class="bg-gray-800 rounded-xl p-4 shadow-lg border-l-4 border-fuchsia-500 flex items-center justify-between">
+        <div>
+            <p class="text-gray-400 text-sm">Value Of Produced Products</p>
+            <p class="text-2xl font-bold text-fuchsia-400 mt-1"><?= number_format($daily_total_revenue ?? 0, 0) ?></p>
+        </div>
+        <i data-feather="settings" class="w-8 h-8 text-fuchsia-400"></i>
+    </div>
+    <div class="bg-gray-800 rounded-xl p-4 shadow-lg border-l-4 border-blue-500 flex items-center justify-between">
+        <div>
+            <p class="text-gray-400 text-sm">Value of Sold Products</p>
+            <p class="text-2xl font-bold text-blue-400 mt-1"><?= number_format($daily_total_revenue_used ?? 0, 0) ?></p>
+        </div>
+        <i data-feather="shopping-cart" class="w-8 h-8 text-blue-400"></i>
+    </div>
+</div>
+
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
     <?php foreach($products as $product):
         $pid = $product['id'];
@@ -60,7 +84,19 @@
             <?php if (!empty($stat['plan_value'])): ?>
                 <p class="text-gray-400">
                     <!-- display loss or profit and difference) due to comparison between plan and production: -->
-                    Estimation: <span class="text-fuchsia-400 font-semibold"><?= number_format($stat['plan_value']) > number_format($stat['product_value']) ? 'Profit of' : 'Loss of ' ?><?= number_format($stat['plan_value'] - $stat['product_value'], ) ?></span>
+                    <?php
+                    $diff =  $stat['product_value'] - $pl['total_value'];
+                    $message = 'Loss of ';
+                    switch (true) {
+                        case $diff < 0:
+                            $message = 'Loss of ';
+                            break;
+                        case $diff > 0:
+                            $message = 'Profit of ';
+                            break;
+                    }
+                    ?>
+                    Estimation: <span class="text-fuchsia-400 font-semibold"><?= $message . ' ' . abs($diff) ?></span>
                 </p>
             <?php endif; ?>
             <div class="grid grid-cols-4 gap-2 mt-2 text-center">

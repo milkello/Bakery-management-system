@@ -211,7 +211,7 @@ function generateProductionReport($conn, $date_from, $date_to) {
     ");
     $stmt->execute([$date_from, $date_to]);
     $productions = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
+
     // Calculate summary
     $total_records = count($productions);
     $total_units = array_sum(array_column($productions, 'quantity_produced'));
@@ -234,7 +234,6 @@ function generateProductionReport($conn, $date_from, $date_to) {
     $stmte->execute();
     $business_name = $stmte->fetchColumn();
     
-    $html = getPDFStyles();
     $html .= "
     <div class='header'>
         <h1> Production Report</h1>
@@ -281,42 +280,101 @@ function generateProductionReport($conn, $date_from, $date_to) {
         </table><br><br><br><br><br><br><br><br><br><br><br><br><br>";
     }
     
-    // Detailed records
+    // Grouped detailed records by date and product
     if (!empty($productions)) {
-        $html .= "
-        <h3 style='color: #84cc16; margin: 20px 0 10px 0;'>Detailed Production Records</h3>
-        <table>
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Product</th>
-                    <th>Quantity</th>
-                    <th>Materials Used</th>
-                    <th>Produced By</th>
-                    <th>Date</th>
-                </tr>
-            </thead>
-            <tbody>";
-        
-        foreach($productions as $prod) {
-            $materials_short = strlen($prod['raw_materials_used']) > 50 
-                ? substr($prod['raw_materials_used'], 0, 50) . '...' 
-                : $prod['raw_materials_used'];
-            
-            $html .= "
-                <tr>
-                    <td>#{$prod['id']}</td>
-                    <td>{$prod['product_name']}</td>
-                    <td><strong>" . number_format($prod['quantity_produced']) . "</strong></td>
-                    <td style='font-size: 9px;'>{$materials_short}</td>
-                    <td>" . ($prod['produced_by'] ?? 'N/A') . "</td>
-                    <td>" . date('M j, Y', strtotime($prod['created_at'])) . "</td>
-                </tr>";
+        // Build grouped structure: [date][product_id]
+        $grouped = [];
+        foreach ($productions as $prod) {
+            $dateKey = date('Y-m-d', strtotime($prod['created_at']));
+            $pid = (int)$prod['product_id'];
+            if (!isset($grouped[$dateKey])) {
+                $grouped[$dateKey] = [];
+            }
+            if (!isset($grouped[$dateKey][$pid])) {
+                $grouped[$dateKey][$pid] = [
+                    'product_name' => $prod['product_name'],
+                    'total_qty'    => 0,
+                    'batches'      => [],
+                    'materials'    => [],
+                ];
+            }
+
+            $grouped[$dateKey][$pid]['total_qty'] += (int)$prod['quantity_produced'];
+            $grouped[$dateKey][$pid]['batches'][] = [
+                'id'       => $prod['id'],
+                'qty'      => $prod['quantity_produced'],
+                'time'     => date('H:i', strtotime($prod['created_at'])),
+                'producer' => $prod['produced_by'] ?? 'N/A',
+                'materials'=> $prod['raw_materials_used'],
+            ];
+
+            if (!empty($prod['raw_materials_used'])) {
+                $grouped[$dateKey][$pid]['materials'][] = $prod['raw_materials_used'];
+            }
         }
-        
+
         $html .= "
-            </tbody>
-        </table>";
+        <h3 style='color: #84cc16; margin: 20px 0 10px 0;'>Detailed Production Records (Grouped by Date & Product)</h3>";
+
+        foreach ($grouped as $dateKey => $productsByDate) {
+            $html .= "
+            <div style='margin: 10px 0 5px 0; font-size: 13px; color:#555; display:flex; justify-content:space-between;'>
+                <span>" . date('l', strtotime($dateKey)) . "</span>
+                <span>" . date('M j, Y', strtotime($dateKey)) . "</span>
+            </div>";
+
+            foreach ($productsByDate as $productId => $info) {
+                $html .= "
+                <div style='margin-bottom: 10px; padding:8px; border:1px solid #ddd; border-radius:4px;'>
+                    <div style='font-weight:bold; font-size:12px; margin-bottom:4px;'>" . htmlspecialchars($info['product_name'], ENT_QUOTES, 'UTF-8') . "</div>
+                    <div style='font-size:11px; margin-bottom:6px;'>Total Produced: <strong>" . number_format($info['total_qty']) . "</strong></div>
+                    <table style='width:100%; border-collapse:collapse; font-size:10px; margin-bottom:5px;'>
+                        <thead>
+                            <tr>
+                                <th style='border-bottom:1px solid #ddd; padding:4px; text-align:left;'>Batch ID</th>
+                                <th style='border-bottom:1px solid #ddd; padding:4px; text-align:left;'>Quantity</th>
+                                <th style='border-bottom:1px solid #ddd; padding:4px; text-align:left;'>Time</th>
+                                <th style='border-bottom:1px solid #ddd; padding:4px; text-align:left;'>Produced By</th>
+                            </tr>
+                        </thead>
+                        <tbody>";
+
+                foreach ($info['batches'] as $batch) {
+                    $html .= "
+                            <tr>
+                                <td style='border-bottom:1px solid #f0f0f0; padding:4px;'>#" . $batch['id'] . "</td>
+                                <td style='border-bottom:1px solid #f0f0f0; padding:4px;'><strong>" . number_format($batch['qty']) . "</strong></td>
+                                <td style='border-bottom:1px solid #f0f0f0; padding:4px;'>" . $batch['time'] . "</td>
+                                <td style='border-bottom:1px solid #f0f0f0; padding:4px;'>" . htmlspecialchars($batch['producer'], ENT_QUOTES, 'UTF-8') . "</td>
+                            </tr>";
+                }
+
+                $html .= "
+                        </tbody>
+                    </table>";
+
+                if (!empty($info['materials'])) {
+                    $html .= "
+                    <div style='font-size:9px; color:#555; margin-top:4px;'>
+                        <strong>Materials Used (summary):</strong><br/>";
+                    foreach ($info['materials'] as $matText) {
+                        $parts = explode(',', (string)$matText);
+                        foreach ($parts as $part) {
+                            $part = trim($part);
+                            if ($part === '') {
+                                continue;
+                            }
+                            $short = strlen($part) > 150 ? substr($part, 0, 150) . '...' : $part;
+                            $html .= "&bull; " . htmlspecialchars($short, ENT_QUOTES, 'UTF-8') . "<br/>";
+                        }
+                    }
+                    $html .= "</div>";
+                }
+
+                $html .= "
+                </div>";
+            }
+        }
     } else {
         $html .= "<div class='no-data'>No production records found for the selected period.</div>";
     }
@@ -844,6 +902,102 @@ function generateComprehensiveReport($conn, $date_from, $date_to) {
     return $html;
 }
 
+function generateCustomerHistoryReport($conn, $date_from, $date_to, $customer_id) {
+    $stmt = $conn->prepare("SELECT * FROM customers WHERE id = ? LIMIT 1");
+    $stmt->execute([$customer_id]);
+    $customer = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if (!$customer) {
+        return getPDFStyles() . "<div class='header'><h1>Customer Not Found</h1></div><div class='no-data'>The requested customer does not exist.</div>";
+    }
+
+    $salesStmt = $conn->prepare("
+        SELECT s.*, p.name AS product_name
+        FROM sales s
+        JOIN products p ON s.product_id = p.id
+        WHERE s.customer_id = ?
+          AND DATE(s.created_at) BETWEEN ? AND ?
+        ORDER BY s.created_at DESC
+    ");
+    $salesStmt->execute([$customer_id, $date_from, $date_to]);
+    $sales = $salesStmt->fetchAll(PDO::FETCH_ASSOC);
+
+    $total_orders = count($sales);
+    $total_spent = array_sum(array_column($sales, 'total_price'));
+
+    $html = getPDFStyles();
+    $stmte = $conn->prepare('SELECT business_name FROM system_settings LIMIT 1');
+    $stmte->execute();
+    $business_name = $stmte->fetchColumn();
+
+    $customer_name = htmlspecialchars($customer['name'] ?? 'Unknown', ENT_QUOTES, 'UTF-8');
+    $customer_type = htmlspecialchars($customer['customer_type'] ?? '', ENT_QUOTES, 'UTF-8');
+    $phone = htmlspecialchars($customer['phone'] ?? 'N/A', ENT_QUOTES, 'UTF-8');
+
+    $html .= "
+    <div class='header'>
+        <h1>Customer Purchase History</h1>
+        <div class='subtitle'>" . $business_name . "</div>
+    </div>
+    <div class='meta-info'>
+        <p><strong>Customer:</strong> " . $customer_name . " (" . $customer_type . ")</p>
+        <p><strong>Contact:</strong> " . $phone . "</p>
+        <p><strong>Period:</strong> " . date('j / m / Y', strtotime($date_from)) . " to " . date('j / m / Y', strtotime($date_to)) . "</p>
+        <p><strong>Generated:</strong> " . date('j / m / Y , g:i A') . "</p>
+    </div>
+    <div class='summary-box'>
+        <h3>Summary</h3>
+        <p><strong>Number Of Orders:</strong> " . number_format($total_orders) . "</p>
+        <p><strong>Total Spent:</strong> " . formatCurrency($total_spent) . "</p>
+    </div>
+    ";
+
+    if (!empty($sales)) {
+        $html .= "
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Date</th>
+                    <th>Product</th>
+                    <th>Qty</th>
+                    <th>Unit Price</th>
+                    <th>Total</th>
+                    <th>Payment</th>
+                </tr>
+            </thead>
+            <tbody>";
+
+        $i = 1;
+        foreach ($sales as $row) {
+            $html .= "
+                <tr>
+                    <td>" . $i . "</td>
+                    <td>" . date('M j, Y', strtotime($row['created_at'])) . "</td>
+                    <td>" . htmlspecialchars($row['product_name'], ENT_QUOTES, 'UTF-8') . "</td>
+                    <td>" . number_format($row['qty']) . "</td>
+                    <td>" . formatCurrency($row['unit_price']) . "</td>
+                    <td><strong>" . formatCurrency($row['total_price']) . "</strong></td>
+                    <td>" . htmlspecialchars($row['payment_method'], ENT_QUOTES, 'UTF-8') . "</td>
+                </tr>";
+            $i++;
+        }
+
+        $html .= "
+            </tbody>
+        </table>";
+    } else {
+        $html .= "<div class='no-data'>No purchases found for this customer in the selected period.</div>";
+    }
+
+    $html .= "
+    <div class='footer'>
+        <p>" . $business_name . " - Customer History Report</p>
+    </div>";
+
+    return $html;
+}
+
 function generateEmployeeProductionReport($conn, $date_from, $date_to, $user_id) {
     $stmt = $conn->prepare("
         SELECT pr.id, pr.product_id, p.name AS product_name, pr.quantity_produced, DATE_FORMAT(pr.created_at, '%Y-%m-%d') AS created_at
@@ -1265,6 +1419,17 @@ switch ($report_type) {
     case 'customers':
         $html = generateCustomersReport($conn, $date_from, $date_to);
         $filename = "Customers_Report_{$date_from}_to_{$date_to}.pdf";
+        break;
+
+    case 'customer_history':
+        $cid = isset($_GET['customer_id']) ? (int)$_GET['customer_id'] : 0;
+        if ($cid > 0) {
+            $html = generateCustomerHistoryReport($conn, $date_from, $date_to, $cid);
+            $filename = "Customer_{$cid}_History_{$date_from}_to_{$date_to}.pdf";
+        } else {
+            $html = getPDFStyles() . "<div class='header'><h1>⚠️ Error</h1></div><div class='no-data'>Customer ID is required for this report.</div>";
+            $filename = "Error_Report.pdf";
+        }
         break;
     
     // Employee reports

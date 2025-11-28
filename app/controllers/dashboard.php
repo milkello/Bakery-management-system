@@ -293,7 +293,48 @@ $iconMap = [
     'special' => '🟣'
 ];
 
+// Fetch products and today's plans/stats
+$products = $conn->query('SELECT id, name, sku, unit, COALESCE(stock,0) as stock, COALESCE(price,0) as price FROM products ORDER BY name')->fetchAll(PDO::FETCH_ASSOC);
+$total_products = $conn->query("SELECT COUNT(*) FROM products")->fetchColumn();
 
+// Daily totals for stats cards
+$daily_total_value_used = 0;
+$stmt = $conn->prepare('
+    SELECT product_id, SUM(total_value) as total_value
+    FROM product_material_plans
+    JOIN material_orders ON material_orders.id = product_material_plans.order_id
+    WHERE product_material_plans.plan_date = CURDATE()
+    GROUP BY product_id
+');
+$stmt->execute();
+$plans = $stmt->fetchAll(PDO::FETCH_ASSOC);
+foreach ($plans as $p) {
+    $pid = $p['product_id'];
+    $daily_total_value_used += (float)($p['total_value'] ?? 0);
+}
+
+// Fetch today's production data from production table
+$productionStmt = $conn->prepare('
+    SELECT product_id, SUM(quantity_produced) as produced, (SELECT COALESCE(price,0) FROM products WHERE id = product_id) as price
+    FROM production
+    WHERE DATE(created_at) = CURDATE()
+    GROUP BY product_id
+');
+$productionStmt->execute();
+$productionData = $productionStmt->fetchAll(PDO::FETCH_ASSOC);
+$productionByProduct = [];
+$daily_total_produced = 0;
+$daily_total_revenue = 0;
+foreach ($productionData as $pd) {
+    $productionByProduct[$pd['product_id']] = $pd;
+    $daily_total_produced += (int)($pd['produced'] ?? 0);
+    $daily_total_revenue += (float)($pd['produced'] ?? 0) * ($pd['price'] ?? 0);
+}
+
+// Total stock value = sum(price * stock)
+$total_value_stmt = $pdo->query('SELECT SUM(price * COALESCE(stock,0)) AS total_stock_value FROM products');
+$total_value_row = $total_value_stmt->fetch(PDO::FETCH_ASSOC);
+$total_value = $total_value_row['total_stock_value'] ?? 0;
 
 // === Low Stock Items ===
 $low_stock = $conn->query("SELECT name, stock FROM products WHERE stock < 10")->fetchAll();

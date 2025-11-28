@@ -13,6 +13,9 @@ $products = $conn->query("SELECT * FROM products")->fetchAll(PDO::FETCH_ASSOC);
 // Fetch all customers for dropdown
 $customers = $conn->query("SELECT id, name, customer_type, phone FROM customers ORDER BY name ASC")->fetchAll(PDO::FETCH_ASSOC);
 
+// Fetch all suppliers for dropdown (used to tag sales with supplied_by)
+$suppliers = $conn->query("SELECT id, name FROM suppliers ORDER BY name ASC")->fetchAll(PDO::FETCH_ASSOC);
+
 // Handle sale submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['product_id'], $_POST['quantity'], $_POST['unit_price'])) {
     $product_id = intval($_POST['product_id']);
@@ -21,36 +24,63 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['product_id'], $_POST[
     $customer_id = !empty($_POST['customer_id']) ? intval($_POST['customer_id']) : null;
     $customer_type = $_POST['customer_type'] ?? 'Regular';
     $payment_method = $_POST['payment_method'] ?? 'Cash';
+    $supplied_by = !empty($_POST['supplied_by']) ? intval($_POST['supplied_by']) : null;
 
-    // Check if stock column exists
-    $checkStock = $conn->prepare("SHOW COLUMNS FROM products LIKE 'stock'");
-    $checkStock->execute();
-    if ($checkStock->rowCount() === 0) {
-        // Add stock column if missing
-        $conn->exec("ALTER TABLE products ADD COLUMN stock INT DEFAULT 0");
-    }
+    // For direct counter sales (no supplied_by), enforce stock checks and deduct from stock here.
+    // For supplier-based sales (supplied_by not null), stock was already adjusted at dispatch/return time,
+    // so we skip stock checks and deduction to avoid double-counting.
 
-    // Get current stock
-    $stmtStock = $conn->prepare("SELECT stock FROM products WHERE id=?");
-    $stmtStock->execute([$product_id]);
-    $stock = $stmtStock->fetchColumn();
+    if ($supplied_by === null) {
+        // Check if stock column exists
+        $checkStock = $conn->prepare("SHOW COLUMNS FROM products LIKE 'stock'");
+        $checkStock->execute();
+        if ($checkStock->rowCount() === 0) {
+            // Add stock column if missing
+            $conn->exec("ALTER TABLE products ADD COLUMN stock INT DEFAULT 0");
+        }
 
-    // Prevent selling more than available
-    if ($quantity_sold > $stock) {
-        $stmtNotif = $conn->prepare("INSERT INTO notifications (type, message) VALUES (?, ?)");
-        $stmtNotif->execute(['over_usage', "Attempted sale exceeds available stock for Product ID $product_id"]);
+        // Get current stock
+        $stmtStock = $conn->prepare("SELECT stock FROM products WHERE id=?");
+        $stmtStock->execute([$product_id]);
+        $stock = $stmtStock->fetchColumn();
+
+        // Prevent selling more than available
+        if ($quantity_sold > $stock) {
+            $stmtNotif = $conn->prepare("INSERT INTO notifications (type, message) VALUES (?, ?)");
+            $stmtNotif->execute(['over_usage', "Attempted sale exceeds available stock for Product ID $product_id"]);
+        } else {
+            // Deduct stock for direct sale
+            $stmtUpdate = $conn->prepare("UPDATE products SET stock = stock - ? WHERE id=?");
+            $stmtUpdate->execute([$quantity_sold, $product_id]);
+
+            // Calculate total price
+            $total_price = $quantity_sold * $unit_price;
+
+            // Insert sale (direct sale, supplied_by remains null)
+            $stmtSale = $conn->prepare("
+                INSERT INTO sales (product_id, qty, unit_price, total_price, customer_type, payment_method, customer_id, supplied_by, sold_by, created_by)
+                VALUES (?,?,?,?,?,?,?,?,?,?)
+            ");
+            $stmtSale->execute([
+                $product_id,
+                $quantity_sold,
+                $unit_price,
+                $total_price,
+                $customer_type,
+                $payment_method,
+                $customer_id,
+                null,
+                $_SESSION['user_id'] ?? 1,
+                $_SESSION['user_id'] ?? 1
+            ]);
+        }
     } else {
-        // Deduct stock
-        $stmtUpdate = $conn->prepare("UPDATE products SET stock = stock - ? WHERE id=?");
-        $stmtUpdate->execute([$quantity_sold, $product_id]);
-
-        // Calculate total price
+        // Supplier-based sale: stock already managed via supplier trips, so just record the sale.
         $total_price = $quantity_sold * $unit_price;
 
-        // Insert sale
         $stmtSale = $conn->prepare("
-            INSERT INTO sales (product_id, qty, unit_price, total_price, customer_type, payment_method, customer_id, sold_by, created_by)
-            VALUES (?,?,?,?,?,?,?,?,?)
+            INSERT INTO sales (product_id, qty, unit_price, total_price, customer_type, payment_method, customer_id, supplied_by, sold_by, created_by)
+            VALUES (?,?,?,?,?,?,?,?,?,?)
         ");
         $stmtSale->execute([
             $product_id,
@@ -60,17 +90,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['product_id'], $_POST[
             $customer_type,
             $payment_method,
             $customer_id,
+            $supplied_by,
             $_SESSION['user_id'] ?? 1,
             $_SESSION['user_id'] ?? 1
         ]);
+    }
 
-        // Notify successful sale
-        $stmtNotif = $conn->prepare("INSERT INTO notifications (type, message) VALUES (?, ?)");
-        $stmtProduct = $conn->prepare("SELECT name, sku FROM products WHERE id=?");
-        $stmtProduct->execute([$product_id]);
-        $product = $stmtProduct->fetch(PDO::FETCH_ASSOC);
-        $name = $product['name'] ?? '';
-        $sku = $product['sku'] ?? '';
+    // Notify successful sale
+    $stmtNotif = $conn->prepare("INSERT INTO notifications (type, message) VALUES (?, ?)");
+    $stmtProduct = $conn->prepare("SELECT name, sku FROM products WHERE id=?");
+    $stmtProduct->execute([$product_id]);
+    $product = $stmtProduct->fetch(PDO::FETCH_ASSOC);
+    $name = $product['name'] ?? '';
+    $sku = $product['sku'] ?? '';
+    $stmtNotif->execute(['sale', "Sold $quantity_sold units of $name ($sku) successfully."]);
         $stmtNotif->execute(['sale', "Sold $quantity_sold units of $name ($sku) successfully."]);
 
         // If the sale was paid via MoMo, record payment reference as a notification for tracing
@@ -91,9 +124,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['product_id'], $_POST[
         // $stmtNotif->execute(['sale', "Sold $quantity_sold units of $name ($sku) successfully."]);
     }
 
-    header("Location: ?page=sales");
-    exit;
-}
+    // header("Location: ?page=sales");
+    // exit;
+
 
 // Sales report generation (GET: ?page=sales&action=report&start_date=YYYY-MM-DD&end_date=YYYY-MM-DD&format=pdf|csv)
 if (isset($_GET['action']) && $_GET['action'] === 'report') {
@@ -199,10 +232,11 @@ if (isset($_GET['action']) && $_GET['action'] === 'report') {
 
 // Fetch all sales logs
 $sales_logs = $conn->query("
-    SELECT s.*, p.name AS product_name, p.sku, u.username AS sold_by
+    SELECT s.*, p.name AS product_name, p.sku, u.username AS sold_by, sp.name AS supplier_name
     FROM sales s
     JOIN products p ON s.product_id = p.id
     LEFT JOIN users u ON s.sold_by = u.id
+    LEFT JOIN suppliers sp ON sp.id = s.supplied_by
     ORDER BY s.id DESC
 ")->fetchAll(PDO::FETCH_ASSOC);
 
