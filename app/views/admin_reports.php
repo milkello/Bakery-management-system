@@ -86,8 +86,8 @@
                         <option value="">— Select Report Type —</option>
                         <option value="sales">Sales Report</option>
                         <option value="production">Production Report</option>
-                        <option value="inventory">Inventory Report</option>
-                        <option value="customers">Customers Analytics Report</option>
+                        <option value="inventory">Stock Report</option>
+                        <option value="customers">Customers Report</option>
                         <option value="employees">Employee Report</option>
                         <option value="materials">Materials Report</option>
                         <option value="comprehensive">Comprehensive Report (All Data)</option>
@@ -182,7 +182,7 @@
                 <div class="p-4 bg-gray-700 rounded-lg border-l-4 border-yellow-500">
                     <h4 class="font-semibold text-white mb-2 flex items-center">
                         <i data-feather="box" class="w-4 h-4 mr-2 text-yellow-400"></i>
-                        Inventory Report
+                        Stock Report
                     </h4>
                     <p class="text-gray-400 text-sm">Stock levels, material usage, and inventory valuation.</p>
                 </div>

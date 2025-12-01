@@ -20,7 +20,13 @@ function getPDFStyles() {
             color: #333;
         }
         .header {
-            text-align: center;
+            text-align: left;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #84cc16;
+            padding-bottom: 15px;
+        }
+        .header1 {
+            text-align: right;
             margin-bottom: 30px;
             border-bottom: 3px solid #84cc16;
             padding-bottom: 15px;
@@ -51,9 +57,9 @@ function getPDFStyles() {
             margin-bottom: 20px;
         }
         th {
-            background: #84cc16;
-            color: white;
-            padding: 10px;
+            border-bottom:1px solid black;
+            color: black;
+            padding: 7px 10px;
             text-align: left;
             font-weight: bold;
         }
@@ -116,7 +122,7 @@ function generateSalesReport($conn, $date_from, $date_to) {
     ");
     $stmt->execute([$date_from, $date_to]);
     $sales = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
+
     // Calculate summary
     $total_sales = count($sales);
     $total_revenue = array_sum(array_column($sales, 'total_price'));
@@ -126,24 +132,38 @@ function generateSalesReport($conn, $date_from, $date_to) {
     $stmte = $conn->prepare('SELECT business_name FROM system_settings LIMIT 1');
     $stmte->execute();
     $business_name = $stmte->fetchColumn();
+
+    $logoBase64 = '';
+    $logoPath = __DIR__ . '/../../logo.png';
+    if (file_exists($logoPath)) {
+        $logoContent = @file_get_contents($logoPath);
+        if ($logoContent !== false) {
+            $logoBase64 = base64_encode($logoContent);
+        }
+    }
+
+    $logoImgTag = $logoBase64
+        ? "<div style='float:right;'><img style='width: 100px;' src='data:image/png;base64," . $logoBase64 . "'/>
+        <div class='subtitle'>" .$business_name ."</div></div>"
+        : '';
+
     $html .= "
     <div class='header'>
-        <h1>Sales Report</h1>
-        <div class='subtitle'>" .$business_name ."</div>
-    </div>
-    <div class='meta-info'>
-        <p><strong>Report Period:</strong> " . date('j / m / Y', strtotime($date_from)) . " to " . date('j / m / Y', strtotime($date_to)) . "</p>
-        <p><strong>Generated at:</strong> " . date('j / m / Y , g:i A') . "</p>
-        <p><strong>Report Type:</strong> Sales Transactions</p>
+        <div style='float:left;'>
+        <br><br>
+            <h1>Sales Report</h1><br>
+            <p>Generated at:</strong> " . date('j / m / Y , g:i A') . "</p>
+        </div>
+        $logoImgTag
+        <div style='clear:both;'></div>
     </div>
     
     <div class='summary-box'>
         <h3>Statistics</h3>
-        <p><strong>Number Of Transactions:</strong> $total_sales</p>
-        <p><strong>Number Of Revenue:</strong> " . formatCurrency($total_revenue) . "</p>
-        <p><strong>Number Of Products Sold:</strong> " . number_format($total_qty) . " products</p>
+        <p><strong>Total Income:</strong> " . formatCurrency($total_revenue) . "</p>
         <p><strong>Average Of Transactions:</strong> " . formatCurrency($total_sales > 0 ? $total_revenue / $total_sales : 0) . "</p>
-    </div>
+        <p><strong>Period:</strong> " . date('j / m / Y', strtotime($date_from)) . " <strong>TO</strong> " . date('j / m / Y', strtotime($date_to)) . "</p>
+    </div><br><br>
     ";
     
     if (!empty($sales)) {
@@ -151,39 +171,59 @@ function generateSalesReport($conn, $date_from, $date_to) {
         <table>
             <thead>
                 <tr>
-                    <th>ID</th>
-                    <th>Product</th>
-                    <th>Qty</th>
-                    <th>Price</th>
-                    <th>Total</th>
-                    <th>Customer Name</th>
-                    <th>Type</th>
-                    <th>Payment</th>
-                    <th>Sold By</th>
-                    <th>Date</th>
+                    <th style='height: 2px;'>ID</th>
+                    <th style='height: 2px;'>Product</th>
+                    <th style='height: 2px;'>Customer Name</th>
+                    <th style='height: 2px;'>Type</th>
+                    <th style='height: 2px;'>Payment</th>
+                    <th style='height: 2px;'>Sold By</th>
+                    <th style='height: 2px;'>Supplied By</th>
+                    <th style='height: 2px;'>Date</th>
+                    <th style='height: 2px;'>Qty</th>
+                    <th style='height: 2px;'>Price</th>
+                    <th style='height: 2px;'>Total</th>
                 </tr>
             </thead>
             <tbody>";
         $i = 1 ;
+        $totalsales = 0;
         foreach($sales as $sale) {
             $customer_display = !empty($sale['customer_name']) ? $sale['customer_name'] : 'Walk-in';
+            $totalsales += $sale['total_price'];
             $html .= "
                 <tr>
-                    <td>{$i}</td>
-                    <td>{$sale['product_name']}</td>
-                    <td>{$sale['qty']}</td>
-                    <td>" . formatCurrency($sale['unit_price']) . "</td>
-                    <td><strong>" . formatCurrency($sale['total_price']) . "</strong></td>
-                    <td>{$customer_display}</td>
-                    <td>{$sale['customer_type']}</td>
-                    <td>{$sale['payment_method']}</td>
-                    <td>" . ($sale['sold_by'] ?? 'N/A') . "</td>
-                    <td>" . date('M j, Y', strtotime($sale['created_at'])) . "</td>
+                    <td style='background:rgba(137, 81, 210, 0.7);'>{$i}</td>
+                    <td style='background:rgba(137, 81, 210, 0.5);'>{$sale['product_name']}</td>
+                    <td style='background:rgba(160, 135, 250, 0.5);'>{$customer_display}</td>
+                    <td style='background:rgba(160, 135, 250, 0.5);'>{$sale['customer_type']}</td>
+                    <td style='background:rgba(160, 135, 250, 0.5);'>{$sale['payment_method']}</td>
+                    <td style='background:rgba(251, 255, 0, 0.5);'>" . ($sale['sold_by'] ?? 'N/A') . "</td>
+                    <td style='background:rgba(251, 255, 0, 0.5);'>" . (
+                        $sale['supplied_by'] ? 
+                        $conn->query("SELECT name FROM suppliers WHERE id = {$sale['supplied_by']} LIMIT 1")->fetchColumn() :
+                        'N/A'
+                    ) . "</td>
+                    <td style='background:rgba(251, 255, 0, 0.5);'>" . date('M j, Y', strtotime($sale['created_at'])) . "</td>
+                    <td style='background:rgba(135, 206, 250, 0.5);'>{$sale['qty']}</td>
+                    <td style='background:rgba(135, 206, 250, 0.5);'>" . formatCurrency($sale['unit_price']) . "</td>
+                    <td style='background:rgba(78, 187, 255, 0.5);'><strong>" . formatCurrency($sale['total_price']) . "</strong></td>
                 </tr>";
                 $i++;
         }
         
         $html .= "
+                <tr>
+                    <td style='background:rgba(135, 206, 250, 0.5);'><strong>Total</strong></td>
+                    <td style='background:rgba(135, 206, 250, 0.5);'>
+                    <td style='background:rgba(135, 206, 250, 0.5);'>
+                    <td style='background:rgba(135, 206, 250, 0.5);'>
+                    <td style='background:rgba(135, 206, 250, 0.5);'>
+                    <td style='background:rgba(135, 206, 250, 0.5);'>
+                    <td style='background:rgba(135, 206, 250, 0.5);'>
+                    <td style='background:rgba(135, 206, 250, 0.5);'>
+                    <td style='background:rgba(135, 206, 250, 0.5);'>
+                    <td style='background:rgba(135, 206, 250, 0.5);'>
+                    <td style='background:rgba(135, 206, 250, 0.6);'><strong>".formatCurrency($totalsales)."</strong></td>
             </tbody>
         </table>";
     } else {
@@ -233,17 +273,30 @@ function generateProductionReport($conn, $date_from, $date_to) {
     $stmte = $conn->prepare('SELECT business_name FROM system_settings LIMIT 1');
     $stmte->execute();
     $business_name = $stmte->fetchColumn();
-    
+
+    $logoBase64 = '';
+    $logoPath = __DIR__ . '/../../logo.png';
+    if (file_exists($logoPath)) {
+        $logoContent = @file_get_contents($logoPath);
+        if ($logoContent !== false) {
+            $logoBase64 = base64_encode($logoContent);
+        }
+    }
+
+    $logoImgTag = $logoBase64
+        ? "<div style='float:right;'><img style='width: 100px;' src='data:image/png;base64," . $logoBase64 . "'/>
+        <div class='subtitle'>" .$business_name ."</div></div>"
+        : '';
+
     $html .= "
     <div class='header'>
-        <h1> Production Report</h1>
-        <div class='subtitle'>".$business_name."</div>
-    </div>
-    
-    <div class='meta-info'>
-        <p><strong>Report Period:</strong> " . date('j / m / Y', strtotime($date_from)) . "  -  " . date('j / m / Y', strtotime($date_to)) . "</p>
-        <p><strong>Generated:</strong> " . date('j / m / Y g:i A') . "</p>
-        <p><strong>Report Type:</strong> Production Report</p>
+        <div style='float:left;'>
+        <br><br>
+            <h1>Production Report</h1><br>
+            <p>Generated at:</strong> " . date('j / m / Y , g:i A') . "</p>
+        </div>
+        $logoImgTag
+        <div style='clear:both;'></div>
     </div>
     
     <div class='summary-box'>
@@ -262,7 +315,7 @@ function generateProductionReport($conn, $date_from, $date_to) {
             <thead>
                 <tr>
                     <th>Product Name</th>
-                    <th>Total Quantity</th>
+                    <th style='text-align: center;'>Total Quantity</th>
                 </tr>
             </thead>
             <tbody>";
@@ -270,8 +323,8 @@ function generateProductionReport($conn, $date_from, $date_to) {
         foreach($top_products as $product) {
             $html .= "
                 <tr>
-                    <td>{$product['name']}</td>
-                    <td><strong>" . number_format($product['total_qty']) . "</strong></td>
+                    <td style='background:rgba(78, 187, 255, 0.5);'>{$product['name']}</td>
+                    <td style='text-align: center; background:rgba(144, 113, 255, 0.5);'><strong style='text-align: center;'> ". number_format($product['total_qty']) . "</strong></td>
                 </tr>";
         }
         
@@ -318,40 +371,18 @@ function generateProductionReport($conn, $date_from, $date_to) {
 
         foreach ($grouped as $dateKey => $productsByDate) {
             $html .= "
-            <div style='margin: 10px 0 5px 0; font-size: 13px; color:#555; display:flex; justify-content:space-between;'>
-                <span>" . date('l', strtotime($dateKey)) . "</span>
-                <span>" . date('M j, Y', strtotime($dateKey)) . "</span>
-            </div>";
+            <div style='background:rgba(0, 217, 255, 0.5);margin:10px;padding:10px;border:1px solid #4b4b4bd1; border-radius:4px;'>
+                <div style='margin: 10px 0 5px 0; font-size: 13px; color :#555; display:flex; justify-content:space-between;'>
+                    <span>" . date('l', strtotime($dateKey)) . "</span>
+                    <span style='float:right;'>" . date('M j, Y', strtotime($dateKey)) . "</span>
+                </div>";
 
             foreach ($productsByDate as $productId => $info) {
                 $html .= "
-                <div style='margin-bottom: 10px; padding:8px; border:1px solid #ddd; border-radius:4px;'>
+                <div style='margin-bottom: 10px; padding:8px; border:1px solid #4b4b4bd1; border-radius:4px;'>
                     <div style='font-weight:bold; font-size:12px; margin-bottom:4px;'>" . htmlspecialchars($info['product_name'], ENT_QUOTES, 'UTF-8') . "</div>
                     <div style='font-size:11px; margin-bottom:6px;'>Total Produced: <strong>" . number_format($info['total_qty']) . "</strong></div>
-                    <table style='width:100%; border-collapse:collapse; font-size:10px; margin-bottom:5px;'>
-                        <thead>
-                            <tr>
-                                <th style='border-bottom:1px solid #ddd; padding:4px; text-align:left;'>Batch ID</th>
-                                <th style='border-bottom:1px solid #ddd; padding:4px; text-align:left;'>Quantity</th>
-                                <th style='border-bottom:1px solid #ddd; padding:4px; text-align:left;'>Time</th>
-                                <th style='border-bottom:1px solid #ddd; padding:4px; text-align:left;'>Produced By</th>
-                            </tr>
-                        </thead>
-                        <tbody>";
-
-                foreach ($info['batches'] as $batch) {
-                    $html .= "
-                            <tr>
-                                <td style='border-bottom:1px solid #f0f0f0; padding:4px;'>#" . $batch['id'] . "</td>
-                                <td style='border-bottom:1px solid #f0f0f0; padding:4px;'><strong>" . number_format($batch['qty']) . "</strong></td>
-                                <td style='border-bottom:1px solid #f0f0f0; padding:4px;'>" . $batch['time'] . "</td>
-                                <td style='border-bottom:1px solid #f0f0f0; padding:4px;'>" . htmlspecialchars($batch['producer'], ENT_QUOTES, 'UTF-8') . "</td>
-                            </tr>";
-                }
-
-                $html .= "
-                        </tbody>
-                    </table>";
+                    ";
 
                 if (!empty($info['materials'])) {
                     $html .= "
@@ -368,12 +399,14 @@ function generateProductionReport($conn, $date_from, $date_to) {
                             $html .= "&bull; " . htmlspecialchars($short, ENT_QUOTES, 'UTF-8') . "<br/>";
                         }
                     }
-                    $html .= "</div>";
+                    $html .= "";
                 }
 
                 $html .= "
-                </div>";
+                </div></div>";
             }
+            $html .= "
+                </div></div>";
         }
     } else {
         $html .= "<div class='no-data'>No production records found for the selected period.</div>";
@@ -411,91 +444,122 @@ function generateInventoryReport($conn, $date_from, $date_to) {
     $business_name = $stmte->fetchColumn();
     
     $html = getPDFStyles();
+    $stmte = $conn->prepare('SELECT business_name FROM system_settings LIMIT 1');
+    $stmte->execute();
+    $business_name = $stmte->fetchColumn();
+
+    $logoBase64 = '';
+    $logoPath = __DIR__ . '/../../logo.png';
+    if (file_exists($logoPath)) {
+        $logoContent = @file_get_contents($logoPath);
+        if ($logoContent !== false) {
+            $logoBase64 = base64_encode($logoContent);
+        }
+    }
+
+    $logoImgTag = $logoBase64
+        ? "<div style='float:right;'><img style='width: 100px;' src='data:image/png;base64," . $logoBase64 . "'/>
+        <div class='subtitle'>" .$business_name ."</div></div>"
+        : '';
+
     $html .= "
     <div class='header'>
-        <h1>Inventory Report</h1>
-        <div class='subtitle'>" . $business_name . "</div>
-    </div>
-    
-    <div class='meta-info'>
-        <p><strong>Report Period:</strong> " . date('F j, Y', strtotime($date_from)) . " to " . date('F j, Y', strtotime($date_to)) . "</p>
-        <p><strong>Generated:</strong> " . date('F j, Y g:i A') . "</p>
-        <p><strong>Report Type:</strong> Complete Inventory Status</p>
+        <div style='float:left;'>
+        <br><br>
+            <h1>Stock Report</h1><br>
+            <p>Generated at:</strong> " . date('j / m / Y , g:i A') . "</p>
+        </div>
+        $logoImgTag
+        <div style='clear:both;'></div>
     </div>
     
     <div class='summary-box'>
         <h3>Inventory Summary</h3>
-        <p><strong>Number Of Types Of Ingredients In Stock:</strong> " . count($products) . " types</p>
-        <p><strong>Number Of Ingredients In Stock :</strong> " . number_format($total_product_stock) . " ingredients</p>
         <p><strong>Value Of Used Ingredients:</strong> " . formatCurrency($total_product_value) . "</p>
-        <p><strong>Value Of Ingredients In Stock:</strong> " . formatCurrency($total_material_value) . "</p>"
-        // <p><strong>Total Inventory Value:</strong> " . formatCurrency($total_product_value + $total_material_value) . "</p>"
-    .""."</div>
-    ";
+        <p><strong>Value Of Ingredients In Stock:</strong> " . formatCurrency($total_material_value) . "</p>
+        <p><strong>Value Of Products In Stock:</strong> " . formatCurrency($total_product_value) . "</p>
+        <p><strong>Value Of Products In Stock:</strong> " . formatCurrency($total_product_value + $total_material_value) . "</p>
+        <p><strong>Period:</strong> " . date('j / m / Y', strtotime($date_from)) . " <strong>TO</strong> " . date('j / m / Y', strtotime($date_to)) . "</p>
+    </div>";
     
     // Products table
     $html .= "
-    <h3 style='color: #84cc16; margin: 20px 0 10px 0;'>Products Inventory</h3>
+    <h3 style='color: #84cc16; margin: 20px 0 10px 0;'>Products In Stock</h3>
     <table>
         <thead>
             <tr>
+                <th>#</th>
                 <th>Product Name</th>
                 <th>SKU</th>
-                <th>Stock</th>
+                <th>Quantity</th>
                 <th>Unit Price</th>
                 <th>Total Value</th>
             </tr>
         </thead>
         <tbody>";
-    
+    $i=1;
     foreach($products as $product) {
         $value = $product['stock'] * $product['price'];
         $html .= "
             <tr>
-                <td>{$product['name']}</td>
-                <td>{$product['sku']}</td>
-                <td>" . number_format($product['stock']) . "</td>
-                <td>" . formatCurrency($product['price']) . "</td>
-                <td><strong>" . formatCurrency($value) . "</strong></td>
+                <td style='background:rgba(160, 135, 250, 0.7);'>{$i}</td>
+                <td style='background:rgba(160, 135, 250, 0.5);'>{$product['name']}</td>
+                <td style='background:rgba(160, 135, 250, 0.5);'>{$product['sku']}</td>
+                <td style='background:rgba(135, 206, 250, 0.5);'>" . number_format($product['stock']) . "</td>
+                <td style='background:rgba(135, 206, 250, 0.5);'>" . formatCurrency($product['price']) . "</td>
+                <td style='background:rgba(78, 187, 255, 0.5);'><strong>" . formatCurrency($value) . "</strong></td>
             </tr>";
+            $i++;
     }
     
     $html .= "
+        <tr style='border-top:1px solid black;'>
+            <td style='background:rgba(135, 206, 250, 0.7);'><strong>Total</td>
+            <td style='background:rgba(135, 206, 250, 0.7);'><td style='background:rgba(135, 206, 250, 0.7);'><td style='background:rgba(135, 206, 250, 0.7);'><td style='background:rgba(135, 206, 250, 0.7);'>
+            <td style='background:rgba(135, 206, 250, 0.7);'><strong><b>" . formatCurrency($total_product_value) . "</b></td>
+        </tr>
         </tbody>
     </table>";
     
     // Materials table
     $html .= "
-    <h3 style='color: #84cc16; margin: 20px 0 10px 0;'>Raw Materials Inventory</h3>
+    <h3 style='color: #84cc16; margin: 20px 0 10px 0;page-break-before: always;'>Raw Materials In Stock</h3>
     <table>
         <thead>
             <tr>
+                <th>#</th>
                 <th>Material Name</th>
-                <th>Stock Quantity</th>
-                <th>Unit</th>
+                <th>Quantity</th>
                 <th>Unit Cost</th>
                 <th>Total Value</th>
             </tr>
         </thead>
         <tbody>";
-    
+    $i=1;
     foreach($materials as $material) {
         $value = $material['stock_quantity'] * $material['unit_cost'];
         $html .= "
             <tr>
-                <td>{$material['name']}</td>
-                <td>" . number_format($material['stock_quantity'], 0) . "</td>
-                <td>{$material['unit']}</td>
-                <td>" . formatCurrency($material['unit_cost']) . "</td>
-                <td><strong>" . formatCurrency($value) . "</strong></td>
+                <td style='background:rgba(160, 135, 250, 0.7);'>{$i}</td>
+                <td style='background:rgba(160, 135, 250, 0.5);'>{$material['name']}</td>
+                <td style='background:rgba(160, 135, 250, 0.5);'>" . number_format($material['stock_quantity'], 0) .' '.$material['unit'] . "</td>
+                <td style='background:rgba(135, 206, 250, 0.5);'>" . formatCurrency($material['unit_cost']) . "</td>
+                <td style='background:rgba(78, 187, 255, 0.5);'><strong>" . formatCurrency($value) . "</strong></td>
             </tr>";
+            $i++;
     }
     
     $html .= "
+        <tr style='border-top:1px solid black;'>
+            <td style='background:rgba(135, 206, 250, 0.7);'><strong>Total</td>
+            <td style='background:rgba(135, 206, 250, 0.7);'><td style='background:rgba(135, 206, 250, 0.7);'><td style='background:rgba(135, 206, 250, 0.7);'>
+            <td style='background:rgba(135, 206, 250, 0.7);'><strong><b>" . formatCurrency($total_material_value) . "</b></td>
+        </tr>
         </tbody>
     </table>";
     
     $html .= "
+    <br><br>
     <div class='footer'>
         <p>" . $business_name . " - Inventory Report</p>
     </div>";
@@ -506,18 +570,25 @@ function generateInventoryReport($conn, $date_from, $date_to) {
 function generateEmployeeReport($conn, $date_from, $date_to) {
     // Fetch employees from the 'employess' table
     try {
-        $employees = $conn->query("
-            SELECT
-                e.*,
-                COALESCE(SUM(CASE WHEN p.created_at BETWEEN ? AND ? THEN 1 ELSE 0 END), 0) AS total_productions,
-                COALESCE(SUM(CASE WHEN s.created_at BETWEEN ? AND ? THEN 1 ELSE 0 END), 0) AS total_sales
-            FROM employees e
-            LEFT JOIN production p ON p.created_by = e.id
-            LEFT JOIN sales s ON s.created_by = e.id OR s.sold_by = e.id
-            WHERE e.position NOT IN ('admin')
-            GROUP BY e.id
-            ORDER BY e.created_at DESC
-        ")->fetchAll(PDO::FETCH_ASSOC);
+$employees = $conn->prepare("
+    SELECT
+        e.*,
+        COALESCE(COUNT(DISTINCT CASE 
+            WHEN DATE(p.created_at) BETWEEN ? AND ? THEN p.id 
+        END), 0) AS total_productions,
+        COALESCE(COUNT(DISTINCT CASE 
+            WHEN DATE(s.created_at) BETWEEN ? AND ? THEN s.id 
+        END), 0) AS total_sales
+    FROM employees e
+    LEFT JOIN users u ON u.email = e.email
+    LEFT JOIN production p ON p.created_by = u.id
+    LEFT JOIN sales s ON (s.created_by = u.id OR s.sold_by = u.id)
+    WHERE e.position NOT IN ('admin')
+    GROUP BY e.id
+    ORDER BY e.created_at DESC
+");
+    $employees->execute([$date_from, $date_to, $date_from, $date_to]);
+    $employees = $employees->fetchAll(PDO::FETCH_ASSOC);
     } catch (Exception $e) {
         // Return minimal HTML to avoid PDF load errors
         return "<div style='font-family: Arial, sans-serif; padding: 20px;'>
@@ -1221,12 +1292,17 @@ function generateEmployeeCombinedReport($conn, $date_from, $date_to, $user_id) {
 
 function generateCustomersReport($conn, $date_from, $date_to) {
     // Fetch all customers
-    $customers = $conn->query("
-        SELECT c.*, u.username as added_by_name
+    $stmt = $conn->prepare("
+        SELECT c.*, u.username as added_by_name, SUM(s.total_price) as total_spent
         FROM customers c
         LEFT JOIN users u ON c.created_by = u.id
+        LEFT JOIN sales s ON c.id = s.customer_id
+        WHERE DATE(s.created_at) BETWEEN ? AND ?
+        GROUP BY c.id
         ORDER BY c.created_at DESC
-    ")->fetchAll(PDO::FETCH_ASSOC);
+    ");
+    $stmt->execute([$date_from, $date_to]);
+    $customers = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
     // Get top buying customers
     $top_buyers = $conn->prepare("
@@ -1263,25 +1339,39 @@ function generateCustomersReport($conn, $date_from, $date_to) {
     $stmte->execute();
     $business_name = $stmte->fetchColumn();
     $html = getPDFStyles();
+    $stmte = $conn->prepare('SELECT business_name FROM system_settings LIMIT 1');
+    $stmte->execute();
+    $business_name = $stmte->fetchColumn();
+
+    $logoBase64 = '';
+    $logoPath = __DIR__ . '/../../logo.png';
+    if (file_exists($logoPath)) {
+        $logoContent = @file_get_contents($logoPath);
+        if ($logoContent !== false) {
+            $logoBase64 = base64_encode($logoContent);
+        }
+    }
+
+    $logoImgTag = $logoBase64
+        ? "<div style='float:right;'><img style='width: 100px;' src='data:image/png;base64," . $logoBase64 . "'/>
+        <div class='subtitle'>" .$business_name ."</div></div>"
+        : '';
+
     $html .= "
     <div class='header'>
-        <h1>Customers Analytics Report</h1>
-        <div class='subtitle'>".$business_name."</div>
+        <div style='float:left;'>
+        <br><br>
+            <h1>Customers Report</h1><br>
+            <p>Generated at:</strong> " . date('j / m / Y , g:i A') . "</p>
+        </div>
+        $logoImgTag
+        <div style='clear:both;'></div>
     </div>
-    
-    <div class='meta-info'>
-        <p><strong>Report Period: </strong> " . date('j / m / Y', strtotime($date_from)) . "  -  " . date('j / m / Y', strtotime($date_to)) . "</p>
-        <p><strong>Generated: </strong> " . date('j / m / Y , g:i A') . "</p>
-        <p><strong>Report Type: </strong> Customer Analytics</p>
-    </div>
-    
     <div class='summary-box'>
        <h3>Customer Statistics</h3>
         <p><strong>Total Number Of Customers:</strong> ".$total_customers." customers</p>
-        <p><strong>Total Regular Customers:</strong> ".$regular_count." customers</p>
-        <p><strong>Total Wholesale Customers:</strong> ".$wholesale_count." customers</p>
-        <p><strong>Total VIP Customers:</strong> ".$vip_count." customers</p>
-        <p><strong>Total Revenue (" . date('j / m / Y', strtotime($date_from)) . "  -  " . date('j / m / Y', strtotime($date_to)) . "): </strong>".formatCurrency($total_customer_revenue)."</p>
+        <p><strong>Total Revenue: </strong>".formatCurrency($total_customer_revenue)."</p>
+        <p><strong>Period:</strong> " . date('j / m / Y', strtotime($date_from)) . "  <strong>TO</strong>  " . date('j / m / Y', strtotime($date_to)) . "</p>
     </div>
     ";
     
@@ -1296,9 +1386,8 @@ function generateCustomersReport($conn, $date_from, $date_to) {
                     <th>Customer Name</th>
                     <th>Type</th>
                     <th>Contact</th>
-                    <th>Purchases</th>
-                    <th>Total Spent</th>
                     <th>Last Purchase</th>
+                    <th>Total Spent</th>
                 </tr>
             </thead>
             <tbody>";
@@ -1311,13 +1400,12 @@ function generateCustomersReport($conn, $date_from, $date_to) {
 
             $html .= "
                 <tr>
-                    <td>{$rank}</td>
-                    <td><strong>{$customer['name']}</strong></td>
-                    <td>{$customer['customer_type']}</td>
-                    <td style='font-size: 9px;'>{$phone_msg}</td>
-                    <td>" . number_format($customer['total_purchases']) . "</td>
-                    <td><strong>" . formatCurrency($customer['total_spent']) . "</strong></td>
-                    <td>{$last_purchase}</td>
+                    <td style='background:rgba(137, 81, 210, 0.7);'>{$rank}</td>
+                    <td style='background:rgba(160, 135, 250, 0.6);'><strong>{$customer['name']}</strong></td>
+                    <td style='background:rgba(160, 135, 250, 0.4);'>{$customer['customer_type']}</td>
+                    <td style='background:rgba(160, 135, 250, 0.5);font-size: 9px;'>{$phone_msg}</td>
+                    <td style='background:rgba(160, 135, 250, 0.5);'>{$last_purchase}</td>
+                    <td style='background:rgba(78, 187, 255, 0.5);'><strong>" . formatCurrency($customer['total_spent']) . "</strong></td>
                 </tr>";
             $rank++;
         }
@@ -1334,13 +1422,12 @@ function generateCustomersReport($conn, $date_from, $date_to) {
         <table>
             <thead>
                 <tr>
-                    <th>ID</th>
+                    <th>#</th>
                     <th>Customer Name</th>
                     <th>Type</th>
                     <th>Contact</th>
                     <th>Address</th>
-                    <th>Added By</th>
-                    <th>Date Added</th>
+                    <th>Total Spent</th>
                 </tr>
             </thead>
             <tbody>";
@@ -1349,20 +1436,19 @@ function generateCustomersReport($conn, $date_from, $date_to) {
             $phone_display = !empty($customer['phone']) ? $customer['phone'] : 'N/A';
             $email_display = !empty($customer['email']) ? $customer['email'] : '';
             $contact = $phone_display . ($email_display ? ' / ' . $email_display : '');
-            $contact_msg = $contact == "N/A" ? "No Info" : $contact;
+            $contact_msg = $contact == "N/A" ? "No Information" : $contact;
             $address = !empty($customer['address']) ? substr($customer['address'], 0, 30) : 'N/A';
             $address_msg = $address == "N/A" ? "No Address" : $address;
             if (strlen($customer['address'] ?? '') > 30) $address .= '...';
             
             $html .= "
                 <tr>
-                    <td>{$i}</td>
-                    <td><strong>{$customer['name']}</strong></td>
-                    <td>{$customer['customer_type']}</td>
-                    <td style='font-size: 9px;'>{$contact_msg}</td>
-                    <td style='font-size: 9px;'>{$address_msg}</td>
-                    <td>" . ($customer['added_by_name'] ?? 'N/A') . "</td>
-                    <td>" . date('M j, Y', strtotime($customer['created_at'])) . "</td>
+                    <td style='background:rgba(137, 81, 210, 0.7);'>{$i}</td>
+                    <td style='background:rgba(160, 135, 250, 0.6);'><strong>{$customer['name']}</strong></td>
+                    <td style='background:rgba(160, 135, 250, 0.4);'>{$customer['customer_type']}</td>
+                    <td style='font-size: 9px;background:rgba(160, 135, 250, 0.5);'>{$contact_msg}</td>
+                    <td style='font-size: 9px;background:rgba(160, 135, 250, 0.5);'>{$address_msg}</td>
+                    <td style='background:rgba(78, 187, 255, 0.5);'><strong>" . formatCurrency($customer['total_spent']) . "</strong></td>
                 </tr>";
                 $i++;
         }
@@ -1474,5 +1560,5 @@ $dompdf = new Dompdf();
 $dompdf->loadHtml($html);
 $dompdf->setPaper('A4', 'landscape');
 $dompdf->render();
-$dompdf->stream($filename, ['Attachment' => true]);
+$dompdf->stream($filename, ['Attachment' => false]);
 exit;

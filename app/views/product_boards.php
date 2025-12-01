@@ -1,7 +1,7 @@
 <?php
 // Product boards view: shows product cards where admin can plan ingredients and staff can record production/sales
 ?>
-<div class="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+<div class="mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
     <div class="bg-gray-800 rounded-xl p-4 shadow-lg border-l-4 border-lime-500 flex items-center justify-between">
         <div>
             <p class="text-gray-400 text-sm">Value Of Ingredients Used</p>
@@ -20,6 +20,28 @@
         <div>
             <p class="text-gray-400 text-sm">Value of Sold Products</p>
             <p class="text-2xl font-bold text-blue-400 mt-1"><?= number_format($daily_total_revenue_used ?? 0, 0) ?></p>
+        </div>
+        <i data-feather="shopping-cart" class="w-8 h-8 text-blue-400"></i>
+    </div>
+    <div class="bg-gray-800 rounded-xl p-4 shadow-lg border-l-4 border-blue-500 flex items-center justify-between">
+        <div>
+            <p class="text-gray-400 text-sm">Balance</p>
+            <?php
+            $balance = $daily_total_revenue_used - $daily_total_value_used;
+            $message = 'Profit of ';
+            switch (true) {
+                case $balance < 0:
+                    $message = 'Loss of ';
+                    break;
+                case $balance == 0:
+                    $message = 'No Profit / Loss';
+                    break;
+                case $balance > 0:
+                    $message = 'Profit of ';
+                    break;
+            }
+            ?>
+            <p class="text-2xl font-bold text-blue-400 mt-1"><?= $message . ' (' . abs($balance) . ' RWF)' ?></p>
         </div>
         <i data-feather="shopping-cart" class="w-8 h-8 text-blue-400"></i>
     </div>

@@ -9,6 +9,11 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+// Detect AJAX requests
+$isAjax = (
+    (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest')
+);
+
 // Simple router
 $page = $_GET['page'] ?? 'home';
 
@@ -63,9 +68,14 @@ if ($page === 'exports_pdf' && $logged_in) {
     include __DIR__ . '/../app/controllers/export_schedule.php';
 } else if (in_array($page, $dashboard_pages) && $logged_in) {
     // Use dashboard layout with sidebar and navbar
-    include __DIR__ . '/../app/views/header.php'; // This includes sidebar and navbar
-    include __DIR__ . '/../app/controllers/' . $page . '.php';
-    include __DIR__ . '/../app/views/footer.php';
+    if ($isAjax) {
+        // For AJAX requests, include only the controller (no layout)
+        include __DIR__ . '/../app/controllers/' . $page . '.php';
+    } else {
+        include __DIR__ . '/../app/views/header.php'; // This includes sidebar and navbar
+        include __DIR__ . '/../app/controllers/' . $page . '.php';
+        include __DIR__ . '/../app/views/footer.php';
+    }
 } else if (in_array($page, $public_pages)) {
     // Use public layout (no sidebar/navbar)
     if ($page === 'home') {

@@ -66,7 +66,7 @@
                 <i data-feather="settings" class="w-5 h-5"></i>
                 <span class="ml-4 hidden lg:block">Production</span>
             </a>
-            <a href="public/?page=sales" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-lime-400 transition-colors">
+            <a href="public/?page=suppliers" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-lime-400 transition-colors">
                 <i data-feather="settings" class="w-5 h-5"></i>
                 <span class="ml-4 hidden lg:block">Sales</span>
             </a>

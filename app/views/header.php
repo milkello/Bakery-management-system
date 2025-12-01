@@ -112,7 +112,7 @@ if ($user):
                     <i data-feather="grid" class="w-5 h-5 flex-shrink-0"></i>
                     <span class="nav-item-text ml-4 truncate"><?= t('product_boards') ?></span>
                 </a>
-                <a href="?page=sales" class="nav-item flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-fuchsia-400 transition-colors <?= $current_page === 'sales' ? 'bg-gray-700 text-fuchsia-400' : '' ?>">
+                <a href="?page=suppliers" class="nav-item flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-fuchsia-400 transition-colors <?= $current_page === 'sales' ? 'bg-gray-700 text-fuchsia-400' : '' ?>">
                     <i data-feather="shopping-cart" class="w-5 h-5 flex-shrink-0"></i>
                     <span class="nav-item-text ml-4 truncate"><?= t('sales') ?></span>
                 <a href="?page=schedules" class="nav-item flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-lime-400 transition-colors <?= $current_page === 'schedules' ? 'bg-gray-700 text-lime-400' : '' ?>">
@@ -144,7 +144,7 @@ if ($user):
                     <i data-feather="settings" class="w-5 h-5 flex-shrink-0"></i>
                     <span class="nav-item-text ml-4 truncate"><?= t('production') ?></span>
                 </a>
-                <a href="?page=sales" class="nav-item flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-fuchsia-400 transition-colors <?= $current_page === 'sales' ? 'bg-gray-700 text-fuchsia-400' : '' ?>">
+                <a href="?page=suppliers" class="nav-item flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-fuchsia-400 transition-colors <?= $current_page === 'sales' ? 'bg-gray-700 text-fuchsia-400' : '' ?>">
                     <i data-feather="shopping-cart" class="w-5 h-5 flex-shrink-0"></i>
                     <span class="nav-item-text ml-4 truncate"><?= t('sales') ?></span>
                 </a>
