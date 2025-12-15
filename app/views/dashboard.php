@@ -126,7 +126,7 @@
             </div>
 
             <!-- Recent Activity -->
-            <div class="bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-700">
+            <!-- <div class="bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-700">
                 <div class="flex items-center space-x-2 mb-6">
                     <i data-feather="activity" class="text-lime-400 w-6 h-6"></i>
                     <h3 class="text-xl font-bold text-lime-400">Recent Activity</h3>
@@ -154,15 +154,15 @@
                         ];
                         $config = $iconConfig[$act['type']] ?? ['icon' => 'circle', 'bg' => 'bg-gray-500', 'text' => 'text-gray-400'];
                     ?>
-                    <div class="flex items-center justify-between bg-gradient-to-r from-gray-700 to-gray-750 p-4 rounded-lg border border-gray-600 hover:border-lime-500 transition-all">
+                    <!-- <div class="flex items-center justify-between bg-gradient-to-r from-gray-700 to-gray-750 p-4 rounded-lg border border-gray-600 hover:border-lime-500 transition-all">
                         <div class="flex items-center gap-4 flex-1">
                             <!-- Icon -->
-                            <div class="w-12 h-12 flex items-center justify-center rounded-full <?= $config['bg'] ?> shadow-lg">
+                            <!-- <div class="w-12 h-12 flex items-center justify-center rounded-full <?= $config['bg'] ?> shadow-lg">
                                 <i data-feather="<?= $config['icon'] ?>" class="w-6 h-6 text-white"></i>
-                            </div>
+                            </div> -->
                             
                             <!-- Content -->
-                            <div class="flex-1">
+                            <!-- <div class="flex-1">
                                 <p class="font-semibold text-white text-sm">
                                     <?= htmlspecialchars($act['action']) ?>
                                 </p>
@@ -198,8 +198,8 @@
                             </div>
                         </div>
 
-                        <!-- Amount/Quantity Badge -->
-                        <div class="flex flex-col items-end gap-1">
+                        Amount/Quantity Badge -->
+                        <!-- <div class="flex flex-col items-end gap-1">
                             <?php if ($act['amount']): ?>
                                 <span class="text-lime-400 font-bold text-lg">
                                     <?= number_format($act['amount']) ?> Frw
@@ -211,17 +211,17 @@
                                 </span>
                             <?php endif; ?>
                         </div>
-                    </div>
+                    </div> -->
                     <?php endforeach; ?>
                     
                     <?php if (empty($recentActivities)): ?>
                         <div class="text-center py-8 text-gray-500">
-                            <i data-feather="inbox" class="w-16 h-16 mx-auto mb-3 opacity-50"></i>
+                            <!-- <i data-feather="inbox" class="w-16 h-16 mx-auto mb-3 opacity-50"></i> -->
                             <p>No recent activities</p>
                         </div>
                     <?php endif; ?>
-                </div>
-            </div>
+                <!--</div>
+            </div> -->
 
 
 

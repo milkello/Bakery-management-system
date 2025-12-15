@@ -1,7 +1,7 @@
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
     <div class="lg:col-span-2 bg-gray-800 rounded-xl p-6 shadow-lg">
         <div class="flex items-center justify-between mb-6">
-            <h3 class="text-xl font-bold text-lime-400">Suppliers</h3>
+            <h3 class="text-xl font-bold text-lime-400">Sales By Suppliers</h3>
             <button type="button" onclick="openSupplierCreateModal()" class="bg-lime-500 hover:bg-lime-600 text-white text-sm font-semibold px-4 py-2 rounded-lg flex items-center space-x-2">
                 <span>+ Add Supplier</span>
             </button>

@@ -89,8 +89,8 @@
                         <option value="inventory">Stock Report</option>
                         <option value="customers">Customers Report</option>
                         <option value="employees">Employee Report</option>
-                        <option value="materials">Materials Report</option>
-                        <option value="comprehensive">Comprehensive Report (All Data)</option>
+                        <!-- <option value="materials">Materials Report</option> -->
+                        <!-- <option value="comprehensive">Comprehensive Report (All Data)</option> -->
                     </select>
                 </div>
 
@@ -140,17 +140,17 @@
                 </div>
 
                 <!-- Generate Buttons -->
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-1 gap-3">
                     <button type="submit" name="generate_pdf" 
                             class="bg-lime-500 hover:bg-lime-600 text-white font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2">
                         <i data-feather="file-text" class="w-4 h-4"></i>
                         <span>PDF Report</span>
                     </button>
-                    <button type="button" onclick="generateCSV()" 
+                    <!-- <button type="button" onclick="generateCSV()" 
                             class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2">
                         <i data-feather="download" class="w-4 h-4"></i>
                         <span>CSV Export</span>
-                    </button>
+                    </button> -->
                 </div>
             </form>
         </div>
@@ -166,18 +166,18 @@
                 <div class="p-4 bg-gray-700 rounded-lg border-l-4 border-green-500">
                     <h4 class="font-semibold text-white mb-2 flex items-center">
                         <i data-feather="trending-up" class="w-4 h-4 mr-2 text-green-400"></i>
-                        Sales Report
+                        Sales & Production Report
                     </h4>
-                    <p class="text-gray-400 text-sm">Complete sales transactions, revenue analysis, and product performance.</p>
+                    <p class="text-gray-400 text-sm">Complete sales transactions, revenue analysis, and production records.</p>
                 </div>
 
-                <div class="p-4 bg-gray-700 rounded-lg border-l-4 border-blue-500">
+                <!-- <div class="p-4 bg-gray-700 rounded-lg border-l-4 border-blue-500">
                     <h4 class="font-semibold text-white mb-2 flex items-center">
                         <i data-feather="settings" class="w-4 h-4 mr-2 text-blue-400"></i>
                         Production Report
                     </h4>
                     <p class="text-gray-400 text-sm">Production records, quantities, and efficiency metrics.</p>
-                </div>
+                </div> -->
 
                 <div class="p-4 bg-gray-700 rounded-lg border-l-4 border-yellow-500">
                     <h4 class="font-semibold text-white mb-2 flex items-center">
@@ -203,13 +203,13 @@
                     <p class="text-gray-400 text-sm">Employee list, schedules, and activity logs.</p>
                 </div>
 
-                <div class="p-4 bg-gray-700 rounded-lg border-l-4 border-lime-500">
+                <!-- <div class="p-4 bg-gray-700 rounded-lg border-l-4 border-lime-500">
                     <h4 class="font-semibold text-white mb-2 flex items-center">
                         <i data-feather="layers" class="w-4 h-4 mr-2 text-lime-400"></i>
                         Comprehensive Report
                     </h4>
                     <p class="text-gray-400 text-sm">All-in-one report with complete business overview.</p>
-                </div>
+                </div> -->
             </div>
         </div>
     </div>

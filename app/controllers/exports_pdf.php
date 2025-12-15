@@ -71,10 +71,11 @@ function getPDFStyles() {
             background: #f9f9f9;
         }
         .summary-box {
-            background: #e8f5e9;
-            padding: 15px;
-            margin: 20px 0;
-            border-left: 4px solid #84cc16;
+            background: #e0f2fe;
+            border-left: 4px solid #0284c7;
+            padding: 12px;
+            margin-bottom: 20px;
+            border-radius: 6px;
         }
         .summary-box h3 {
             margin: 0 0 10px 0;
@@ -93,6 +94,26 @@ function getPDFStyles() {
             padding: 40px;
             color: #999;
             font-style: italic;
+        }
+        .day-block {
+            background:#f0fdf4;
+            border:1px solid #86efac;
+            margin:10px 0;
+            padding:10px;
+            border-radius:6px;
+
+            /* Page-break only before IF needed */
+            page-break-inside: avoid;
+        }
+
+        /* Product block inside each day */
+        .product-block {
+            background:#ecfdf5;
+            border:1px solid #6ee7b7;
+            padding:8px;
+            margin-bottom:8px;
+            border-radius:6px;
+            page-break-inside: avoid;
         }
     </style>
     ";
@@ -160,7 +181,7 @@ function generateSalesReport($conn, $date_from, $date_to) {
     
     <div class='summary-box'>
         <h3>Statistics</h3>
-        <p><strong>Total Income:</strong> " . formatCurrency($total_revenue) . "</p>
+        <p><strong>Total Sales Value:</strong> " . formatCurrency($total_revenue) . "</p>
         <p><strong>Average Of Transactions:</strong> " . formatCurrency($total_sales > 0 ? $total_revenue / $total_sales : 0) . "</p>
         <p><strong>Period:</strong> " . date('j / m / Y', strtotime($date_from)) . " <strong>TO</strong> " . date('j / m / Y', strtotime($date_to)) . "</p>
     </div><br><br>
@@ -269,6 +290,17 @@ function generateProductionReport($conn, $date_from, $date_to) {
     $stmt2->execute([$date_from, $date_to]);
     $top_products = $stmt2->fetchAll(PDO::FETCH_ASSOC);
     
+    // Calculate total value of ingredients used (from material plans in the same period)
+    $stmt3 = $conn->prepare(" 
+        SELECT SUM(mo.total_value) AS total_ingredient_value
+        FROM product_material_plans pmp
+        JOIN material_orders mo ON mo.id = pmp.order_id
+        WHERE pmp.plan_date BETWEEN ? AND ?
+    ");
+    $stmt3->execute([$date_from, $date_to]);
+    $ingredients_data = $stmt3->fetch(PDO::FETCH_ASSOC);
+    $total_ingredient_value = $ingredients_data['total_ingredient_value'] ?? 0;
+    
     $html = getPDFStyles();
     $stmte = $conn->prepare('SELECT business_name FROM system_settings LIMIT 1');
     $stmte->execute();
@@ -285,7 +317,7 @@ function generateProductionReport($conn, $date_from, $date_to) {
 
     $logoImgTag = $logoBase64
         ? "<div style='float:right;'><img style='width: 100px;' src='data:image/png;base64," . $logoBase64 . "'/>
-        <div class='subtitle'>" .$business_name ."</div></div>"
+        <div class='subtitle'>" . $business_name . "</div></div>"
         : '';
 
     $html .= "
@@ -301,12 +333,12 @@ function generateProductionReport($conn, $date_from, $date_to) {
     
     <div class='summary-box'>
         <h3>Summary Statistics</h3>
+        <p><strong>Value Of Used Ingredients:</strong> " . formatCurrency($total_ingredient_value) . "</p>
         <p><strong>Number Of Productions:</strong> $total_records</p>
-        <p><strong>Number Of Products Produced:</strong> " . number_format($total_units) . " products</p>
-        <p><strong>Average For Productions:</strong> " . number_format($total_records > 0 ? $total_units / $total_records : 0, 0) . " products</p>
+        
     </div>
     ";
-    
+       
     // Top products
     if (!empty($top_products)) {
         $html .= "
@@ -335,79 +367,126 @@ function generateProductionReport($conn, $date_from, $date_to) {
     
     // Grouped detailed records by date and product
     if (!empty($productions)) {
-        // Build grouped structure: [date][product_id]
-        $grouped = [];
-        foreach ($productions as $prod) {
-            $dateKey = date('Y-m-d', strtotime($prod['created_at']));
-            $pid = (int)$prod['product_id'];
-            if (!isset($grouped[$dateKey])) {
-                $grouped[$dateKey] = [];
-            }
-            if (!isset($grouped[$dateKey][$pid])) {
-                $grouped[$dateKey][$pid] = [
-                    'product_name' => $prod['product_name'],
-                    'total_qty'    => 0,
-                    'batches'      => [],
-                    'materials'    => [],
-                ];
-            }
-
-            $grouped[$dateKey][$pid]['total_qty'] += (int)$prod['quantity_produced'];
-            $grouped[$dateKey][$pid]['batches'][] = [
-                'id'       => $prod['id'],
-                'qty'      => $prod['quantity_produced'],
-                'time'     => date('H:i', strtotime($prod['created_at'])),
-                'producer' => $prod['produced_by'] ?? 'N/A',
-                'materials'=> $prod['raw_materials_used'],
-            ];
-
-            if (!empty($prod['raw_materials_used'])) {
-                $grouped[$dateKey][$pid]['materials'][] = $prod['raw_materials_used'];
-            }
-        }
-
-        $html .= "
-        <h3 style='color: #84cc16; margin: 20px 0 10px 0;'>Detailed Production Records (Grouped by Date & Product)</h3>";
-
-        foreach ($grouped as $dateKey => $productsByDate) {
-            $html .= "
-            <div style='background:rgba(0, 217, 255, 0.5);margin:10px;padding:10px;border:1px solid #4b4b4bd1; border-radius:4px;'>
-                <div style='margin: 10px 0 5px 0; font-size: 13px; color :#555; display:flex; justify-content:space-between;'>
-                    <span>" . date('l', strtotime($dateKey)) . "</span>
-                    <span style='float:right;'>" . date('M j, Y', strtotime($dateKey)) . "</span>
-                </div>";
-
-            foreach ($productsByDate as $productId => $info) {
-                $html .= "
-                <div style='margin-bottom: 10px; padding:8px; border:1px solid #4b4b4bd1; border-radius:4px;'>
-                    <div style='font-weight:bold; font-size:12px; margin-bottom:4px;'>" . htmlspecialchars($info['product_name'], ENT_QUOTES, 'UTF-8') . "</div>
-                    <div style='font-size:11px; margin-bottom:6px;'>Total Produced: <strong>" . number_format($info['total_qty']) . "</strong></div>
-                    ";
-
-                if (!empty($info['materials'])) {
-                    $html .= "
-                    <div style='font-size:9px; color:#555; margin-top:4px;'>
-                        <strong>Materials Used (summary):</strong><br/>";
-                    foreach ($info['materials'] as $matText) {
-                        $parts = explode(',', (string)$matText);
-                        foreach ($parts as $part) {
-                            $part = trim($part);
-                            if ($part === '') {
-                                continue;
-                            }
-                            $short = strlen($part) > 150 ? substr($part, 0, 150) . '...' : $part;
-                            $html .= "&bull; " . htmlspecialchars($short, ENT_QUOTES, 'UTF-8') . "<br/>";
-                        }
-                    }
-                    $html .= "";
+            // Build grouped structure: [date][product_id]
+            $grouped = [];
+            foreach ($productions as $prod) {
+                $dateKey = date('Y-m-d', strtotime($prod['created_at']));
+                $date = $dateKey;
+                $pid = (int)$prod['product_id'];
+                if (!isset($grouped[$dateKey])) {
+                    $grouped[$dateKey] = [];
+                }
+                if (!isset($grouped[$dateKey][$pid])) {
+                    $grouped[$dateKey][$pid] = [
+                        'product_name' => $prod['product_name'],
+                        'total_qty'    => 0,
+                        'batches'      => [],
+                        'materials'    => [],
+                    ];
                 }
 
-                $html .= "
-                </div></div>";
+                $grouped[$dateKey][$pid]['total_qty'] += (int)$prod['quantity_produced'];
+                $grouped[$dateKey][$pid]['batches'][] = [
+                    'id'       => $prod['id'],
+                    'qty'      => $prod['quantity_produced'],
+                    'time'     => date('H:i', strtotime($prod['created_at'])),
+                    'producer' => $prod['produced_by'] ?? 'N/A',
+                    'materials'=> $prod['raw_materials_used'],
+                ];
+
+                if (!empty($prod['raw_materials_used'])) {
+                    $grouped[$dateKey][$pid]['materials'][] = $prod['raw_materials_used'];
+                }
             }
+
+            $dates = array_keys($grouped);
+            $date_count = count($dates);
+            
+            // Calculate approximate content height needed for each day
+            // This assumes each product entry takes about 150px and each day header takes 50px
+            $current_page_height = 0;
+            $max_page_height = 1000; // Adjust this based on your page size
+            
             $html .= "
-                </div></div>";
+    <h3 style='color:#3b82f6; margin-top:20px;'>Detailed Production Records (Grouped by Date & Product)</h3>
+    ";
+
+    foreach ($grouped as $dateKey => $productsByDate) {
+
+        // Day container — avoids page breaking inside
+        $html .= "
+        <div class='day-block'>
+            <div style='display:flex; justify-content:space-between; font-size:13px;'>
+                <strong>" . date('l', strtotime($dateKey)) . "</strong>
+                <span>" . date('M j, Y', strtotime($dateKey)) . "</span>
+            </div>
+            <hr style='margin:6px 0; border:0; border-top:1px solid #a7f3d0;'>
+        ";
+
+        foreach ($productsByDate as $productId => $info) {
+
+            $html .= "
+            <div class='product-block'>
+                <div style='font-weight:bold; font-size:12px; margin-bottom:4px;'>
+                    " . htmlspecialchars($info['product_name']) . "
+                </div>
+
+                <div style='font-size:11px; margin-bottom:6px;'>
+                    Total Produced: <strong>" . number_format($info['total_qty']) . "</strong>
+                </div>
+            ";
+
+            if (!empty($info['materials'])) {
+                $html .= "<div style='font-size:10px;'><strong>Materials Used:</strong><br>";
+                foreach ($info['materials'] as $mat) {
+                    // Each $mat is a comma-separated string of materials like "Flour: 10kg, Sugar: 5kg"
+                    $parts = preg_split('/\s*,\s*/', $mat, -1, PREG_SPLIT_NO_EMPTY);
+                    foreach ($parts as $part) {
+                        // Split into name and value on the first colon, so we can align nicely
+                        $name = $part;
+                        $value = '';
+                        $colonPos = strpos($part, ':');
+                        if ($colonPos !== false) {
+                            $name = trim(substr($part, 0, $colonPos));
+                            $value = trim(substr($part, $colonPos + 1));
+                        }
+
+                        $nameShort = strlen($name) > 120 ? substr($name, 0, 120) . "..." : $name;
+                        $valueShort = strlen($value) > 60 ? substr($value, 0, 60) . "..." : $value;
+
+                        $moneyText = '';
+                        if ($valueShort !== '') {
+                            if (preg_match('/^([0-9]+(?:\.[0-9]+)?)/', $value, $mQty)) {
+                                $qtyNum = (float)$mQty[1];
+                                $stmtCost = $conn->prepare("SELECT unit_cost FROM raw_materials WHERE name = ? LIMIT 1");
+                                $stmtCost->execute([$name]);
+                                $unitCost = $stmtCost->fetchColumn();
+                                if ($unitCost !== false) {
+                                    $moneyVal = $qtyNum * (float)$unitCost;
+                                    $moneyText = formatCurrency($moneyVal);
+                                }
+                            }
+                        }
+
+                        $html .= "&bull; <span style='display:inline-block; min-width:120px; margin-right:10px;'>" . htmlspecialchars($nameShort) . "</span>";
+                        if ($valueShort !== '') {
+                            $html .= "<span style='display:inline-block; margin-right:10px;'>" . htmlspecialchars($valueShort) . "</span>";
+                        }
+                        if ($moneyText !== '') {
+                            $html .= "<span style='display:inline-block;'>" . htmlspecialchars($moneyText) . "</span>";
+                        }
+                        $html .= "<br>";
+                    }
+                }
+                $html .= "</div>";
+            }
+
+            $html .= "</div>"; // end product-block
         }
+
+        $html .= "</div>"; // end day-block
+    }
+
     } else {
         $html .= "<div class='no-data'>No production records found for the selected period.</div>";
     }
@@ -438,6 +517,17 @@ function generateInventoryReport($conn, $date_from, $date_to) {
     foreach($materials as $m) {
         $total_material_value += $m['stock_quantity'] * $m['unit_cost'];
     }
+    
+    // Calculate value of ingredients used during the selected period (from material plans)
+    $usedStmt = $conn->prepare(" 
+        SELECT SUM(mo.total_value) AS total_ingredient_value
+        FROM product_material_plans pmp
+        JOIN material_orders mo ON mo.id = pmp.order_id
+        WHERE pmp.plan_date BETWEEN ? AND ?
+    ");
+    $usedStmt->execute([$date_from, $date_to]);
+    $usedRow = $usedStmt->fetch(PDO::FETCH_ASSOC);
+    $used_ingredients_value = $usedRow['total_ingredient_value'] ?? 0;
     
     $stmte = $conn->prepare('SELECT business_name FROM system_settings LIMIT 1');
     $stmte->execute();
@@ -475,7 +565,7 @@ function generateInventoryReport($conn, $date_from, $date_to) {
     
     <div class='summary-box'>
         <h3>Inventory Summary</h3>
-        <p><strong>Value Of Used Ingredients:</strong> " . formatCurrency($total_product_value) . "</p>
+        <p><strong>Value Of Used Ingredients:</strong> " . formatCurrency($used_ingredients_value) . "</p>
         <p><strong>Value Of Ingredients In Stock:</strong> " . formatCurrency($total_material_value) . "</p>
         <p><strong>Value Of Products In Stock:</strong> " . formatCurrency($total_product_value) . "</p>
         <p><strong>Value Of Products In Stock:</strong> " . formatCurrency($total_product_value + $total_material_value) . "</p>
