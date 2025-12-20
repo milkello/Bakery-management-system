@@ -41,7 +41,7 @@
                     break;
             }
             ?>
-            <p class="text-2xl font-bold text-blue-400 mt-1"><?= $message . ' (' . abs($balance) . ' RWF)' ?></p>
+            <p class="text-2xl font-bold text-blue-400 mt-1"><?= $message . ' (' . number_format(abs($balance), 0) . ' RWF)' ?></p>
         </div>
         <i data-feather="shopping-cart" class="w-8 h-8 text-blue-400"></i>
     </div>
@@ -143,6 +143,74 @@
     </div>
     <?php endforeach; ?>
 </div>
+
+<?php
+// Aggregate today's planned ingredients across all products
+$ingredientsSummary = [];
+$ingredientsTotalUnits = 0;
+$ingredientsTotalValue = 0;
+
+try {
+    $stmtIng = $conn->prepare('
+        SELECT rm.name, rm.unit, moi.material_id,
+               SUM(moi.qty) AS total_qty,
+               SUM(moi.total_value) AS total_value
+        FROM product_material_plans pmp
+        JOIN material_orders mo ON mo.id = pmp.order_id
+        JOIN material_order_items moi ON moi.order_id = mo.id
+        LEFT JOIN raw_materials rm ON rm.id = moi.material_id
+        WHERE pmp.plan_date = CURDATE()
+        GROUP BY moi.material_id, rm.name, rm.unit
+        ORDER BY rm.name
+    ');
+    $stmtIng->execute();
+    $ingredientsSummary = $stmtIng->fetchAll(PDO::FETCH_ASSOC);
+
+    foreach ($ingredientsSummary as $row) {
+        $qty = (float)($row['total_qty'] ?? 0);
+        $val = (float)($row['total_value'] ?? 0);
+        $ingredientsTotalUnits += $qty;
+        $ingredientsTotalValue += $val;
+    }
+} catch (Exception $e) {
+    // Fail silently in the view; controller already handles main errors
+}
+?>
+
+<?php if (!empty($ingredientsSummary)): ?>
+<div class="mt-8 bg-gray-800 rounded-xl p-4 shadow-lg">
+    <h3 class="text-lg font-bold text-lime-400 mb-3">Ingredients Summary <span><h3 style="float:right;">Total: <?= number_format($ingredientsTotalValue, 0) ?> Rwf</h3></span></h3>
+    <div class="overflow-x-auto">
+        <table class="min-w-full text-sm text-left text-gray-300">
+            <thead class="text-xs uppercase text-gray-400 border-b border-gray-700">
+                <tr>
+                    <th class="py-2 pr-4">Ingredient</th>
+                    <th class="py-2 px-4 text-right">Total Units Used</th>
+                    <th class="py-2 px-4 text-right">Total Value (RWF)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($ingredientsSummary as $row): ?>
+                    <tr class="border-b border-gray-700/60">
+                        <td class="py-2 pr-4">
+                            <?= htmlspecialchars($row['name'] ?? 'Unknown') ?>
+                            <?php if (!empty($row['unit'])): ?>
+                                <span class="text-xs text-gray-400"></span>
+                            <?php endif; ?>
+                        </td>
+                        <td class="py-2 px-4 text-right font-semibold">
+                            <?= number_format($row['total_qty'] ?? 0, 2) ?> <?= htmlspecialchars($row['unit']) ?>
+                        </td>
+                        <td class="py-2 px-4 text-right text-lime-400 font-semibold">
+                            <?= number_format($row['total_value'] ?? 0, 0) ?>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+</div>
+<?php endif; ?>
 
 <!-- Plan modal -->
 <div id="planModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">

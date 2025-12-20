@@ -40,10 +40,10 @@ London 9578, UK
 
 Open: 9.30 am - 2.30pm
 
-booking@grilli.com
+blessingbakery@gmail.com
 
 Booking Request
-+88-123-123456
++250 793 471 432
 
 Find A Table
 
@@ -213,7 +213,7 @@ Sam Jhonson
 Online Reservation
 
 Booking request
-+88-123-123456
++250 793 471 432
 or fill out the order form
 
 placeholder = Your Name
@@ -245,7 +245,7 @@ Contact Us
 
 Booking Request
 
-+88-123-123456
++250 793 471 432
 
 Location
 
@@ -311,9 +311,9 @@ alt = grilli home
 
 Restaurant St, Delicious City, London 9578, UK
 
-booking@grilli.com
+blessingbakery@gmail.com
 
-Booking Request : +88-123-123456
+Booking Request : +250 793 471 432
 
 Open : 09:00 am - 01:00 pm
 
@@ -442,5 +442,5 @@ Monday to Sunday
 Contact Us
 Restaurant St, Delicious City, London 9578, UK
 
-+88-123-123456
++250 793 471 432
 reservation@restro.com
