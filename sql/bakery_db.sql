@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Nov 28, 2025 at 06:53 PM
+-- Generation Time: Dec 20, 2025 at 11:57 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -262,7 +262,10 @@ INSERT INTO `material_orders` (`id`, `order_date`, `total_value`, `note`, `creat
 (20, '2025-11-21', 5000.00, '', 1, '2025-11-21 12:51:04'),
 (21, '2025-11-22', 8000.00, '', 1, '2025-11-22 15:57:12'),
 (22, '2025-11-22', 58000.00, '', 1, '2025-11-22 17:24:54'),
-(23, '2025-11-22', 20000.00, '', 1, '2025-11-22 17:37:55');
+(23, '2025-11-22', 20000.00, '', 1, '2025-11-22 17:37:55'),
+(24, '2025-12-01', 0.00, '', 1, '2025-12-01 13:04:52'),
+(25, '2025-12-15', 5000.00, '', 1, '2025-12-15 10:18:13'),
+(26, '2025-12-15', 5000.00, '', 1, '2025-12-15 10:45:28');
 
 -- --------------------------------------------------------
 
@@ -325,7 +328,9 @@ INSERT INTO `material_order_items` (`id`, `order_id`, `material_id`, `qty`, `uni
 (76, 21, 4, 10.000, 300.0000, 3000.00),
 (77, 22, 1, 4.000, 2000.0000, 8000.00),
 (78, 22, 5, 100.000, 500.0000, 50000.00),
-(79, 23, 2, 10.000, 2000.0000, 20000.00);
+(79, 23, 2, 10.000, 2000.0000, 20000.00),
+(81, 25, 5, 10.000, 500.0000, 5000.00),
+(82, 26, 5, 10.000, 500.0000, 5000.00);
 
 -- --------------------------------------------------------
 
@@ -452,25 +457,47 @@ INSERT INTO `notifications` (`id`, `type`, `message`, `data`, `is_read`, `create
 (102, 'plan_update', 'Updated plan for Cake (CK-001) on 2025-11-09', NULL, 1, NULL, '2025-11-09 18:22:45'),
 (103, 'plan_update', 'Updated plan for Gateau (GA-001) on 2025-11-09', NULL, 1, NULL, '2025-11-09 18:22:59'),
 (104, 'employee_added', 'habimana jean was added as staff', NULL, 1, NULL, '2025-11-12 12:59:46'),
-(105, 'plan_update', 'Saved plan for Bread (BR-001) on 16/11/2025', NULL, 0, NULL, '2025-11-16 14:52:39'),
-(106, 'production', 'Produced 100 units of Bread', '{\"product_id\":2,\"quantity\":100,\"product_name\":\"Bread\"}', 0, 2, '2025-11-16 14:54:07'),
-(107, 'sale', 'Sold 10 units of Bread (BR-001) successfully.', NULL, 0, NULL, '2025-11-16 14:57:33'),
-(108, 'sale', 'Sold 80 units of Bread (BR-001) successfully.', NULL, 0, NULL, '2025-11-16 16:39:14'),
-(109, 'plan_update', 'Saved plan for Biscuit (BS-001) on 17/11/2025', NULL, 0, NULL, '2025-11-17 15:54:37'),
-(110, 'production', 'Produced 100 units of Biscuit', '{\"product_id\":6,\"quantity\":100,\"product_name\":\"Biscuit\"}', 0, 2, '2025-11-17 15:56:00'),
-(111, 'sale', 'Sold 50 units of Cake (CK-001) successfully.', NULL, 0, NULL, '2025-11-17 16:10:25'),
-(112, 'plan_update', 'Saved plan for Biscuit (BS-001) on 18/11/2025', NULL, 0, NULL, '2025-11-18 13:09:01'),
-(113, 'plan_update', 'Saved plan for Biscuit (BS-001) on 21/11/2025', NULL, 0, NULL, '2025-11-21 12:51:04'),
-(114, 'production', 'Produced 100 units of Biscuit', '{\"product_id\":6,\"quantity\":100,\"product_name\":\"Biscuit\"}', 0, 2, '2025-11-21 12:51:56'),
-(115, 'plan_update', 'Saved plan for Biscuit (BS-001) on 22/11/2025', NULL, 0, NULL, '2025-11-22 15:57:13'),
-(116, 'production', 'Produced 100 units of Biscuit', '{\"product_id\":6,\"quantity\":100,\"product_name\":\"Biscuit\"}', 0, 2, '2025-11-22 15:59:01'),
-(117, 'plan_update', 'Saved plan for Bread (BR-001) on 22/11/2025', NULL, 0, NULL, '2025-11-22 17:24:54'),
-(118, 'production', 'Produced 100 units of Bread', '{\"product_id\":2,\"quantity\":100,\"product_name\":\"Bread\"}', 0, 2, '2025-11-22 17:25:43'),
-(119, 'sale', 'Sold 28 units of Cake (CK-001) successfully.', NULL, 0, NULL, '2025-11-22 17:26:08'),
-(120, 'plan_update', 'Saved plan for Cake (CK-001) on 22/11/2025', NULL, 0, NULL, '2025-11-22 17:37:55'),
-(121, 'sale', 'Sold 10 units of Bread (BR-001) successfully.', NULL, 0, NULL, '2025-11-28 13:35:09'),
-(122, 'sale', 'Sold 10 units of Bread (BR-001) successfully.', NULL, 0, NULL, '2025-11-28 13:35:09'),
-(123, 'sale', 'Supplier #1 sold 10 units of Biscuit (BS-001) successfully.', NULL, 0, NULL, '2025-11-28 13:42:21');
+(105, 'plan_update', 'Saved plan for Bread (BR-001) on 16/11/2025', NULL, 1, NULL, '2025-11-16 14:52:39'),
+(106, 'production', 'Produced 100 units of Bread', '{\"product_id\":2,\"quantity\":100,\"product_name\":\"Bread\"}', 1, 2, '2025-11-16 14:54:07'),
+(107, 'sale', 'Sold 10 units of Bread (BR-001) successfully.', NULL, 1, NULL, '2025-11-16 14:57:33'),
+(108, 'sale', 'Sold 80 units of Bread (BR-001) successfully.', NULL, 1, NULL, '2025-11-16 16:39:14'),
+(109, 'plan_update', 'Saved plan for Biscuit (BS-001) on 17/11/2025', NULL, 1, NULL, '2025-11-17 15:54:37'),
+(110, 'production', 'Produced 100 units of Biscuit', '{\"product_id\":6,\"quantity\":100,\"product_name\":\"Biscuit\"}', 1, 2, '2025-11-17 15:56:00'),
+(111, 'sale', 'Sold 50 units of Cake (CK-001) successfully.', NULL, 1, NULL, '2025-11-17 16:10:25'),
+(112, 'plan_update', 'Saved plan for Biscuit (BS-001) on 18/11/2025', NULL, 1, NULL, '2025-11-18 13:09:01'),
+(113, 'plan_update', 'Saved plan for Biscuit (BS-001) on 21/11/2025', NULL, 1, NULL, '2025-11-21 12:51:04'),
+(114, 'production', 'Produced 100 units of Biscuit', '{\"product_id\":6,\"quantity\":100,\"product_name\":\"Biscuit\"}', 1, 2, '2025-11-21 12:51:56'),
+(115, 'plan_update', 'Saved plan for Biscuit (BS-001) on 22/11/2025', NULL, 1, NULL, '2025-11-22 15:57:13'),
+(116, 'production', 'Produced 100 units of Biscuit', '{\"product_id\":6,\"quantity\":100,\"product_name\":\"Biscuit\"}', 1, 2, '2025-11-22 15:59:01'),
+(117, 'plan_update', 'Saved plan for Bread (BR-001) on 22/11/2025', NULL, 1, NULL, '2025-11-22 17:24:54'),
+(118, 'production', 'Produced 100 units of Bread', '{\"product_id\":2,\"quantity\":100,\"product_name\":\"Bread\"}', 1, 2, '2025-11-22 17:25:43'),
+(119, 'sale', 'Sold 28 units of Cake (CK-001) successfully.', NULL, 1, NULL, '2025-11-22 17:26:08'),
+(120, 'plan_update', 'Saved plan for Cake (CK-001) on 22/11/2025', NULL, 1, NULL, '2025-11-22 17:37:55'),
+(121, 'sale', 'Sold 10 units of Bread (BR-001) successfully.', NULL, 1, NULL, '2025-11-28 13:35:09'),
+(122, 'sale', 'Sold 10 units of Bread (BR-001) successfully.', NULL, 1, NULL, '2025-11-28 13:35:09'),
+(123, 'sale', 'Supplier #1 sold 10 units of Biscuit (BS-001) successfully.', NULL, 1, NULL, '2025-11-28 13:42:21'),
+(124, 'sale', 'Trip allocation: supplier #1 sold 10 units of Bread (BR-001) via trip item #2.', NULL, 1, NULL, '2025-11-28 20:12:09'),
+(125, 'sale', 'Trip allocation: supplier #1 sold 10 units of Biscuit (BS-001) via trip item #1.', NULL, 1, NULL, '2025-11-28 20:12:54'),
+(126, 'sale', 'Trip allocation: supplier #1 sold 1 units of Gateau (GA-001) via trip item #3.', NULL, 1, NULL, '2025-11-28 20:13:14'),
+(127, 'sale', 'Trip allocation: supplier #1 sold 5 units of Gateau (GA-001) via trip item #3.', NULL, 1, NULL, '2025-11-28 20:13:37'),
+(128, 'sale', 'Trip allocation: supplier #1 sold 1 units of Gateau (GA-001) via trip item #3.', NULL, 1, NULL, '2025-11-28 20:13:45'),
+(129, 'sale', 'Trip allocation: supplier #1 sold 3 units of Gateau (GA-001) via trip item #3.', NULL, 1, NULL, '2025-11-28 20:14:25'),
+(130, 'sale', 'Trip allocation: supplier #1 sold 10 units of Biscuit (BS-001) via trip item #5.', NULL, 1, NULL, '2025-11-28 21:03:56'),
+(131, 'sale', 'Trip allocation: supplier #2 sold 10 units of Biscuit (BS-001) via trip item #6.', NULL, 1, NULL, '2025-11-28 21:13:58'),
+(132, 'sale', 'Trip allocation: supplier #2 sold 3 units of Biscuit (BS-001) via trip item #7.', NULL, 1, NULL, '2025-11-29 07:42:44'),
+(133, 'sale', 'Trip allocation: supplier #2 sold 2 units of Biscuit (BS-001) via trip item #7.', NULL, 1, NULL, '2025-11-29 07:43:02'),
+(134, 'sale', 'Trip allocation: supplier #3 sold 9 units of Bread (BR-001) via trip item #11.', NULL, 1, NULL, '2025-11-29 08:42:04'),
+(135, 'sale', 'Trip allocation: supplier #3 sold 1 units of Bread (BR-001) via trip item #11.', NULL, 1, NULL, '2025-11-29 09:03:05'),
+(136, 'sale', 'Trip allocation: supplier #3 sold 5 units of Bread (BR-001) via trip item #13.', NULL, 1, NULL, '2025-11-29 11:25:06'),
+(137, 'sale', 'Trip allocation: supplier #3 sold 3 units of Bread (BR-001) via trip item #11.', NULL, 1, NULL, '2025-11-29 14:15:59'),
+(138, 'sale', 'Trip allocation: supplier #3 sold 2 units of Bread (BR-001) via trip item #11.', NULL, 1, NULL, '2025-11-29 14:24:32'),
+(139, 'sale', 'Trip allocation: supplier #3 sold 1 units of Bread (BR-001) via trip item #11.', NULL, 1, NULL, '2025-11-29 14:45:15'),
+(140, 'plan_update', 'Saved plan for Biscuit (BS-001) on 01/12/2025', NULL, 1, NULL, '2025-12-01 13:04:52'),
+(141, 'plan_update', 'Updated plan for Biscuit (BS-001) on 2025-12-01', NULL, 1, NULL, '2025-12-01 13:06:47'),
+(142, 'sale', 'Trip allocation: supplier #3 sold 1 units of Bread (BR-001) via trip item #13.', NULL, 1, NULL, '2025-12-01 14:44:59'),
+(143, 'sale', 'Trip allocation: supplier #1 sold 25 units of Biscuit (BS-001) via trip item #14.', NULL, 1, NULL, '2025-12-15 10:15:23'),
+(145, 'plan_update', 'Saved plan for Bread (BR-001) on 15/12/2025', NULL, 0, NULL, '2025-12-15 10:45:28'),
+(146, 'sale', 'Trip allocation: supplier #3 sold 10 units of Bread (BR-001) via trip item #15.', NULL, 0, NULL, '2025-12-15 10:49:46');
 
 -- --------------------------------------------------------
 
@@ -620,9 +647,9 @@ CREATE TABLE `products` (
 
 INSERT INTO `products` (`id`, `name`, `sku`, `price`, `unit`, `created_at`, `stock`) VALUES
 (1, 'Cake', 'CK-001', 200.00, 'piece', '2025-10-11 17:11:03', 0),
-(2, 'Bread', 'BR-001', 100.00, 'piece', '2025-10-12 13:20:24', 190),
-(5, 'Gateau', 'GA-001', 5000.00, 'piece', '2025-10-19 15:31:47', 70),
-(6, 'Biscuit', 'BS-001', 100.00, 'packet              ', '2025-10-25 16:37:18', 790);
+(2, 'Bread', 'BR-001', 100.00, 'piece', '2025-10-12 13:20:24', 80),
+(5, 'Gateau', 'GA-001', 5000.00, 'piece', '2025-10-19 15:31:47', 60),
+(6, 'Biscuit', 'BS-001', 100.00, 'packet              ', '2025-10-25 16:37:18', 650);
 
 -- --------------------------------------------------------
 
@@ -688,7 +715,10 @@ INSERT INTO `product_material_plans` (`id`, `product_id`, `order_id`, `plan_date
 (17, 6, 20, '2025-11-21', '2025-11-21 12:51:04'),
 (18, 6, 21, '2025-11-22', '2025-11-22 15:57:13'),
 (19, 2, 22, '2025-11-22', '2025-11-22 17:24:54'),
-(20, 1, 23, '2025-11-22', '2025-11-22 17:37:55');
+(20, 1, 23, '2025-11-22', '2025-11-22 17:37:55'),
+(21, 6, 24, '2025-12-01', '2025-12-01 13:04:52'),
+(22, 6, 25, '2025-12-15', '2025-12-15 10:18:13'),
+(23, 2, 26, '2025-12-15', '2025-12-15 10:45:28');
 
 -- --------------------------------------------------------
 
@@ -736,7 +766,7 @@ INSERT INTO `raw_materials` (`id`, `name`, `unit`, `category`, `unit_cost`, `sto
 (2, 'ifarini', 'kg', 'ingredient', 1700.0000, 20.000, 10.000, NULL, NULL, '2025-10-11 17:12:32'),
 (3, 'Pakimaya', 'packet', '', 300.0000, 60.000, 10.000, NULL, NULL, '2025-10-19 16:05:36'),
 (4, 'Eggs', 'piece', 'ingredient', 200.0000, 0.000, 10.000, NULL, NULL, '2025-10-25 16:38:12'),
-(5, 'amata', 'liter', 'drinks', 500.0000, 4570.000, 123.000, NULL, NULL, '2025-11-12 13:01:20');
+(5, 'amata', 'liter', 'drinks', 500.0000, 4550.000, 123.000, NULL, NULL, '2025-11-12 13:01:20');
 
 -- --------------------------------------------------------
 
@@ -881,7 +911,28 @@ INSERT INTO `sales` (`id`, `product_id`, `qty`, `unit_price`, `total_price`, `cu
 (49, 1, 50, 200.00, 10000.00, 'Wholesale', 'Cash', 3, NULL, NULL, 1, 1, '2025-11-17 16:10:25'),
 (50, 1, 28, 200.00, 5600.00, 'Regular', 'Cash', NULL, NULL, NULL, 2, 2, '2025-11-22 17:26:08'),
 (51, 2, 10, 100.00, 1000.00, 'Regular', 'Cash', 2, 1, NULL, 1, 1, '2025-11-28 13:35:09'),
-(52, 6, 10, 100.00, 1000.00, 'Regular', 'Cash', 2, 1, NULL, 1, 1, '2025-11-28 13:42:21');
+(52, 6, 10, 100.00, 1000.00, 'Regular', 'Cash', 2, 1, NULL, 1, 1, '2025-11-28 13:42:21'),
+(53, 2, 10, 100.00, 1000.00, 'Regular', 'Cash', 2, 1, 2, 1, 1, '2025-11-28 20:12:09'),
+(54, 6, 10, 100.00, 1000.00, 'Wholesale', 'Cash', 3, 1, 1, 1, 1, '2025-11-28 20:12:54'),
+(55, 5, 1, 5000.00, 5000.00, 'Regular', 'Cash', NULL, 1, 3, 1, 1, '2025-11-28 20:13:14'),
+(56, 5, 5, 5000.00, 25000.00, 'Regular', 'Cash', NULL, 1, 3, 1, 1, '2025-11-28 20:13:37'),
+(57, 5, 1, 5000.00, 5000.00, 'Regular', 'Cash', NULL, 1, 3, 1, 1, '2025-11-28 20:13:45'),
+(58, 5, 3, 5000.00, 15000.00, 'Regular', 'Cash', NULL, 1, 3, 1, 1, '2025-11-28 20:14:25'),
+(59, 6, 10, 100.00, 1000.00, 'Wholesale', 'Cash', 3, 1, 5, 1, 1, '2025-11-28 21:03:56'),
+(60, 6, 9, 100.00, 900.00, 'Wholesale', 'Cash', 3, 2, 6, 1, 1, '2025-11-28 21:13:58'),
+(61, 6, 3, 100.00, 300.00, 'Wholesale', 'Cash', 3, 2, 7, 1, 1, '2025-11-29 07:42:44'),
+(62, 6, 1, 100.00, 100.00, 'Regular', 'Cash', 1, 2, 7, 1, 1, '2025-11-29 07:43:02'),
+(63, 6, 10, 100.00, 1000.00, 'Regular', 'Cash', 3, 2, NULL, 1, 1, '2025-11-29 08:23:07'),
+(64, 2, 4, 100.00, 400.00, 'Regular', 'Cash', NULL, 3, 11, 1, 1, '2025-11-29 08:42:04'),
+(65, 2, 2, 100.00, 200.00, 'Regular', 'Cash', 3, 3, 11, 1, 1, '2025-11-29 09:03:05'),
+(66, 2, 4, 100.00, 400.00, 'Regular', 'Cash', NULL, 3, 13, 1, 1, '2025-11-29 11:25:06'),
+(67, 6, 10, 100.00, 1000.00, 'Regular', 'Cash', 3, 3, NULL, 1, 1, '2025-11-29 11:28:13'),
+(68, 2, 3, 100.00, 300.00, 'Regular', 'Cash', NULL, 3, 11, 1, 1, '2025-11-29 14:15:59'),
+(69, 2, 1, 100.00, 100.00, 'Regular', 'Cash', 3, 3, 11, 1, 1, '2025-11-29 14:24:32'),
+(70, 2, 4, 100.00, 400.00, 'Regular', 'Cash', 3, 3, 11, 1, 1, '2025-11-29 14:45:15'),
+(71, 2, 1, 100.00, 100.00, 'Regular', 'Cash', 3, 3, 13, 1, 1, '2025-12-01 14:44:59'),
+(72, 6, 25, 100.00, 2500.00, 'Regular', 'Cash', NULL, 1, 14, 1, 1, '2025-12-15 10:15:23'),
+(73, 2, 10, 100.00, 1000.00, 'Regular', 'Cash', 3, 3, 15, 1, 1, '2025-12-15 10:49:46');
 
 -- --------------------------------------------------------
 
@@ -1132,7 +1183,134 @@ INSERT INTO `schedules` (`id`, `title`, `description`, `schedule_type`, `start_t
 (221, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-11-26 06:00:00', '2025-11-26 14:00:00', 15, 'scheduled', '{\"employee_id\":15,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-11-22 16:50:35', '2025-11-22 16:50:35'),
 (222, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-11-27 06:00:00', '2025-11-27 14:00:00', 15, 'scheduled', '{\"employee_id\":15,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-11-22 16:50:35', '2025-11-22 16:50:35'),
 (223, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-11-28 06:00:00', '2025-11-28 14:00:00', 15, 'scheduled', '{\"employee_id\":15,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-11-22 16:50:35', '2025-11-22 16:50:35'),
-(224, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-11-29 06:00:00', '2025-11-29 14:00:00', 15, 'scheduled', '{\"employee_id\":15,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-11-22 16:50:35', '2025-11-22 16:50:35');
+(224, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-11-29 06:00:00', '2025-11-29 14:00:00', 15, 'scheduled', '{\"employee_id\":15,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-11-22 16:50:35', '2025-11-22 16:50:35'),
+(225, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-08 06:00:00', '2025-12-08 14:00:00', 1, 'scheduled', '{\"employee_id\":1,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-11 12:30:06', '2025-12-11 12:30:06'),
+(226, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-09 06:00:00', '2025-12-09 14:00:00', 1, 'scheduled', '{\"employee_id\":1,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-11 12:30:06', '2025-12-11 12:30:06'),
+(227, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-10 06:00:00', '2025-12-10 14:00:00', 1, 'scheduled', '{\"employee_id\":1,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-11 12:30:06', '2025-12-11 12:30:06'),
+(228, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-12 06:00:00', '2025-12-12 14:00:00', 1, 'scheduled', '{\"employee_id\":1,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-11 12:30:06', '2025-12-11 12:30:06'),
+(229, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-13 06:00:00', '2025-12-13 14:00:00', 1, 'scheduled', '{\"employee_id\":1,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-11 12:30:06', '2025-12-11 12:30:06'),
+(230, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-14 06:00:00', '2025-12-14 14:00:00', 1, 'scheduled', '{\"employee_id\":1,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-11 12:30:06', '2025-12-11 12:30:06'),
+(231, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-08 06:00:00', '2025-12-08 14:00:00', 4, 'scheduled', '{\"employee_id\":4,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-11 12:30:06', '2025-12-11 12:30:06'),
+(232, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-09 06:00:00', '2025-12-09 14:00:00', 4, 'scheduled', '{\"employee_id\":4,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-11 12:30:06', '2025-12-11 12:30:06'),
+(233, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-10 06:00:00', '2025-12-10 14:00:00', 4, 'scheduled', '{\"employee_id\":4,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-11 12:30:06', '2025-12-11 12:30:06'),
+(234, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-11 06:00:00', '2025-12-11 14:00:00', 4, 'scheduled', '{\"employee_id\":4,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-11 12:30:06', '2025-12-11 12:30:06'),
+(235, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-12 06:00:00', '2025-12-12 14:00:00', 4, 'scheduled', '{\"employee_id\":4,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-11 12:30:06', '2025-12-11 12:30:06'),
+(236, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-13 06:00:00', '2025-12-13 14:00:00', 4, 'scheduled', '{\"employee_id\":4,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-11 12:30:06', '2025-12-11 12:30:06'),
+(237, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-08 06:00:00', '2025-12-08 14:00:00', 8, 'scheduled', '{\"employee_id\":8,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-11 12:30:06', '2025-12-11 12:30:06'),
+(238, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-09 06:00:00', '2025-12-09 14:00:00', 8, 'scheduled', '{\"employee_id\":8,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-11 12:30:06', '2025-12-11 12:30:06'),
+(239, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-10 06:00:00', '2025-12-10 14:00:00', 8, 'scheduled', '{\"employee_id\":8,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-11 12:30:06', '2025-12-11 12:30:06'),
+(240, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-11 06:00:00', '2025-12-11 14:00:00', 8, 'scheduled', '{\"employee_id\":8,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-11 12:30:06', '2025-12-11 12:30:06'),
+(241, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-13 06:00:00', '2025-12-13 14:00:00', 8, 'scheduled', '{\"employee_id\":8,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-11 12:30:06', '2025-12-11 12:30:06'),
+(242, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-14 06:00:00', '2025-12-14 14:00:00', 8, 'scheduled', '{\"employee_id\":8,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-11 12:30:06', '2025-12-11 12:30:06'),
+(243, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-08 06:00:00', '2025-12-08 14:00:00', 9, 'scheduled', '{\"employee_id\":9,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-11 12:30:06', '2025-12-11 12:30:06'),
+(244, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-09 06:00:00', '2025-12-09 14:00:00', 9, 'scheduled', '{\"employee_id\":9,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-11 12:30:06', '2025-12-11 12:30:06'),
+(245, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-10 06:00:00', '2025-12-10 14:00:00', 9, 'scheduled', '{\"employee_id\":9,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-11 12:30:06', '2025-12-11 12:30:06'),
+(246, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-11 06:00:00', '2025-12-11 14:00:00', 9, 'scheduled', '{\"employee_id\":9,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-11 12:30:06', '2025-12-11 12:30:06'),
+(247, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-13 06:00:00', '2025-12-13 14:00:00', 9, 'scheduled', '{\"employee_id\":9,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-11 12:30:06', '2025-12-11 12:30:06'),
+(248, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-14 06:00:00', '2025-12-14 14:00:00', 9, 'scheduled', '{\"employee_id\":9,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-11 12:30:06', '2025-12-11 12:30:06'),
+(249, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-08 06:00:00', '2025-12-08 14:00:00', 10, 'scheduled', '{\"employee_id\":10,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-11 12:30:06', '2025-12-11 12:30:06'),
+(250, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-09 06:00:00', '2025-12-09 14:00:00', 10, 'scheduled', '{\"employee_id\":10,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-11 12:30:06', '2025-12-11 12:30:06'),
+(251, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-10 06:00:00', '2025-12-10 14:00:00', 10, 'scheduled', '{\"employee_id\":10,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-11 12:30:06', '2025-12-11 12:30:06'),
+(252, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-12 06:00:00', '2025-12-12 14:00:00', 10, 'scheduled', '{\"employee_id\":10,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-11 12:30:06', '2025-12-11 12:30:06'),
+(253, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-13 06:00:00', '2025-12-13 14:00:00', 10, 'scheduled', '{\"employee_id\":10,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-11 12:30:06', '2025-12-11 12:30:06'),
+(254, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-14 06:00:00', '2025-12-14 14:00:00', 10, 'scheduled', '{\"employee_id\":10,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-11 12:30:06', '2025-12-11 12:30:06'),
+(255, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-08 06:00:00', '2025-12-08 14:00:00', 11, 'scheduled', '{\"employee_id\":11,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-11 12:30:06', '2025-12-11 12:30:06'),
+(256, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-09 06:00:00', '2025-12-09 14:00:00', 11, 'scheduled', '{\"employee_id\":11,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-11 12:30:06', '2025-12-11 12:30:06'),
+(257, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-10 06:00:00', '2025-12-10 14:00:00', 11, 'scheduled', '{\"employee_id\":11,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-11 12:30:06', '2025-12-11 12:30:06'),
+(258, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-11 06:00:00', '2025-12-11 14:00:00', 11, 'scheduled', '{\"employee_id\":11,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-11 12:30:06', '2025-12-11 12:30:06'),
+(259, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-13 06:00:00', '2025-12-13 14:00:00', 11, 'scheduled', '{\"employee_id\":11,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-11 12:30:06', '2025-12-11 12:30:06'),
+(260, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-14 06:00:00', '2025-12-14 14:00:00', 11, 'scheduled', '{\"employee_id\":11,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-11 12:30:06', '2025-12-11 12:30:06'),
+(261, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-08 06:00:00', '2025-12-08 14:00:00', 12, 'scheduled', '{\"employee_id\":12,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-11 12:30:06', '2025-12-11 12:30:06'),
+(262, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-09 06:00:00', '2025-12-09 14:00:00', 12, 'scheduled', '{\"employee_id\":12,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-11 12:30:06', '2025-12-11 12:30:06'),
+(263, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-10 06:00:00', '2025-12-10 14:00:00', 12, 'scheduled', '{\"employee_id\":12,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-11 12:30:06', '2025-12-11 12:30:06'),
+(264, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-12 06:00:00', '2025-12-12 14:00:00', 12, 'scheduled', '{\"employee_id\":12,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-11 12:30:06', '2025-12-11 12:30:06'),
+(265, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-13 06:00:00', '2025-12-13 14:00:00', 12, 'scheduled', '{\"employee_id\":12,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-11 12:30:06', '2025-12-11 12:30:06'),
+(266, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-14 06:00:00', '2025-12-14 14:00:00', 12, 'scheduled', '{\"employee_id\":12,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-11 12:30:06', '2025-12-11 12:30:06'),
+(267, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-08 06:00:00', '2025-12-08 14:00:00', 13, 'scheduled', '{\"employee_id\":13,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-11 12:30:06', '2025-12-11 12:30:06'),
+(268, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-09 06:00:00', '2025-12-09 14:00:00', 13, 'scheduled', '{\"employee_id\":13,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-11 12:30:06', '2025-12-11 12:30:06'),
+(269, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-10 06:00:00', '2025-12-10 14:00:00', 13, 'scheduled', '{\"employee_id\":13,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-11 12:30:06', '2025-12-11 12:30:06'),
+(270, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-11 06:00:00', '2025-12-11 14:00:00', 13, 'scheduled', '{\"employee_id\":13,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-11 12:30:06', '2025-12-11 12:30:06'),
+(271, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-13 06:00:00', '2025-12-13 14:00:00', 13, 'scheduled', '{\"employee_id\":13,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-11 12:30:06', '2025-12-11 12:30:06'),
+(272, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-14 06:00:00', '2025-12-14 14:00:00', 13, 'scheduled', '{\"employee_id\":13,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-11 12:30:06', '2025-12-11 12:30:06'),
+(273, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-08 06:00:00', '2025-12-08 14:00:00', 14, 'scheduled', '{\"employee_id\":14,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-11 12:30:06', '2025-12-11 12:30:06'),
+(274, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-09 06:00:00', '2025-12-09 14:00:00', 14, 'scheduled', '{\"employee_id\":14,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-11 12:30:06', '2025-12-11 12:30:06'),
+(275, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-10 06:00:00', '2025-12-10 14:00:00', 14, 'scheduled', '{\"employee_id\":14,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-11 12:30:06', '2025-12-11 12:30:06'),
+(276, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-11 06:00:00', '2025-12-11 14:00:00', 14, 'scheduled', '{\"employee_id\":14,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-11 12:30:06', '2025-12-11 12:30:06'),
+(277, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-13 06:00:00', '2025-12-13 14:00:00', 14, 'scheduled', '{\"employee_id\":14,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-11 12:30:06', '2025-12-11 12:30:06'),
+(278, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-14 06:00:00', '2025-12-14 14:00:00', 14, 'scheduled', '{\"employee_id\":14,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-11 12:30:06', '2025-12-11 12:30:06'),
+(279, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-08 06:00:00', '2025-12-08 14:00:00', 15, 'scheduled', '{\"employee_id\":15,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-11 12:30:06', '2025-12-11 12:30:06'),
+(280, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-10 06:00:00', '2025-12-10 14:00:00', 15, 'scheduled', '{\"employee_id\":15,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-11 12:30:06', '2025-12-11 12:30:06'),
+(281, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-11 06:00:00', '2025-12-11 14:00:00', 15, 'scheduled', '{\"employee_id\":15,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-11 12:30:06', '2025-12-11 12:30:06'),
+(282, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-12 06:00:00', '2025-12-12 14:00:00', 15, 'scheduled', '{\"employee_id\":15,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-11 12:30:06', '2025-12-11 12:30:06'),
+(283, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-13 06:00:00', '2025-12-13 14:00:00', 15, 'scheduled', '{\"employee_id\":15,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-11 12:30:06', '2025-12-11 12:30:06'),
+(284, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-14 06:00:00', '2025-12-14 14:00:00', 15, 'scheduled', '{\"employee_id\":15,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-11 12:30:06', '2025-12-11 12:30:06'),
+(285, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-15 06:00:00', '2025-12-15 14:00:00', 1, 'scheduled', '{\"employee_id\":1,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-15 08:53:58', '2025-12-15 08:53:58'),
+(286, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-16 06:00:00', '2025-12-16 14:00:00', 1, 'scheduled', '{\"employee_id\":1,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-15 08:53:58', '2025-12-15 08:53:58'),
+(287, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-17 06:00:00', '2025-12-17 14:00:00', 1, 'scheduled', '{\"employee_id\":1,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-15 08:53:58', '2025-12-15 08:53:58'),
+(288, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-18 06:00:00', '2025-12-18 14:00:00', 1, 'scheduled', '{\"employee_id\":1,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-15 08:53:58', '2025-12-15 08:53:58'),
+(289, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-20 06:00:00', '2025-12-20 14:00:00', 1, 'scheduled', '{\"employee_id\":1,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-15 08:53:58', '2025-12-15 08:53:58'),
+(290, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-21 06:00:00', '2025-12-21 14:00:00', 1, 'scheduled', '{\"employee_id\":1,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-15 08:53:58', '2025-12-15 08:53:58'),
+(291, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-15 06:00:00', '2025-12-15 14:00:00', 4, 'scheduled', '{\"employee_id\":4,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-15 08:53:58', '2025-12-15 08:53:58'),
+(292, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-16 06:00:00', '2025-12-16 14:00:00', 4, 'scheduled', '{\"employee_id\":4,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-15 08:53:58', '2025-12-15 08:53:58'),
+(293, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-18 06:00:00', '2025-12-18 14:00:00', 4, 'scheduled', '{\"employee_id\":4,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-15 08:53:58', '2025-12-15 08:53:58'),
+(294, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-19 06:00:00', '2025-12-19 14:00:00', 4, 'scheduled', '{\"employee_id\":4,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-15 08:53:58', '2025-12-15 08:53:58'),
+(295, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-20 06:00:00', '2025-12-20 14:00:00', 4, 'scheduled', '{\"employee_id\":4,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-15 08:53:58', '2025-12-15 08:53:58'),
+(296, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-21 06:00:00', '2025-12-21 14:00:00', 4, 'scheduled', '{\"employee_id\":4,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-15 08:53:58', '2025-12-15 08:53:58'),
+(297, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-15 06:00:00', '2025-12-15 14:00:00', 8, 'scheduled', '{\"employee_id\":8,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-15 08:53:58', '2025-12-15 08:53:58'),
+(298, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-16 06:00:00', '2025-12-16 14:00:00', 8, 'scheduled', '{\"employee_id\":8,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-15 08:53:58', '2025-12-15 08:53:58'),
+(299, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-17 06:00:00', '2025-12-17 14:00:00', 8, 'scheduled', '{\"employee_id\":8,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-15 08:53:58', '2025-12-15 08:53:58'),
+(300, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-18 06:00:00', '2025-12-18 14:00:00', 8, 'scheduled', '{\"employee_id\":8,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-15 08:53:58', '2025-12-15 08:53:58'),
+(301, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-20 06:00:00', '2025-12-20 14:00:00', 8, 'scheduled', '{\"employee_id\":8,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-15 08:53:58', '2025-12-15 08:53:58'),
+(302, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-21 06:00:00', '2025-12-21 14:00:00', 8, 'scheduled', '{\"employee_id\":8,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-15 08:53:58', '2025-12-15 08:53:58'),
+(303, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-15 06:00:00', '2025-12-15 14:00:00', 9, 'scheduled', '{\"employee_id\":9,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-15 08:53:58', '2025-12-15 08:53:58'),
+(304, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-16 06:00:00', '2025-12-16 14:00:00', 9, 'scheduled', '{\"employee_id\":9,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-15 08:53:58', '2025-12-15 08:53:58'),
+(305, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-17 06:00:00', '2025-12-17 14:00:00', 9, 'scheduled', '{\"employee_id\":9,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-15 08:53:58', '2025-12-15 08:53:58'),
+(306, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-19 06:00:00', '2025-12-19 14:00:00', 9, 'scheduled', '{\"employee_id\":9,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-15 08:53:58', '2025-12-15 08:53:58'),
+(307, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-20 06:00:00', '2025-12-20 14:00:00', 9, 'scheduled', '{\"employee_id\":9,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-15 08:53:58', '2025-12-15 08:53:58'),
+(308, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-21 06:00:00', '2025-12-21 14:00:00', 9, 'scheduled', '{\"employee_id\":9,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-15 08:53:58', '2025-12-15 08:53:58'),
+(309, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-16 06:00:00', '2025-12-16 14:00:00', 10, 'scheduled', '{\"employee_id\":10,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-15 08:53:58', '2025-12-15 08:53:58'),
+(310, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-17 06:00:00', '2025-12-17 14:00:00', 10, 'scheduled', '{\"employee_id\":10,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-15 08:53:58', '2025-12-15 08:53:58'),
+(311, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-18 06:00:00', '2025-12-18 14:00:00', 10, 'scheduled', '{\"employee_id\":10,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-15 08:53:58', '2025-12-15 08:53:58'),
+(312, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-19 06:00:00', '2025-12-19 14:00:00', 10, 'scheduled', '{\"employee_id\":10,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-15 08:53:58', '2025-12-15 08:53:58'),
+(313, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-20 06:00:00', '2025-12-20 14:00:00', 10, 'scheduled', '{\"employee_id\":10,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-15 08:53:58', '2025-12-15 08:53:58'),
+(314, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-21 06:00:00', '2025-12-21 14:00:00', 10, 'scheduled', '{\"employee_id\":10,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-15 08:53:58', '2025-12-15 08:53:58'),
+(315, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-15 06:00:00', '2025-12-15 14:00:00', 11, 'scheduled', '{\"employee_id\":11,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-15 08:53:58', '2025-12-15 08:53:58'),
+(316, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-16 06:00:00', '2025-12-16 14:00:00', 11, 'scheduled', '{\"employee_id\":11,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-15 08:53:58', '2025-12-15 08:53:58'),
+(317, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-18 06:00:00', '2025-12-18 14:00:00', 11, 'scheduled', '{\"employee_id\":11,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-15 08:53:58', '2025-12-15 08:53:58'),
+(318, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-19 06:00:00', '2025-12-19 14:00:00', 11, 'scheduled', '{\"employee_id\":11,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-15 08:53:58', '2025-12-15 08:53:58'),
+(319, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-20 06:00:00', '2025-12-20 14:00:00', 11, 'scheduled', '{\"employee_id\":11,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-15 08:53:58', '2025-12-15 08:53:58'),
+(320, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-21 06:00:00', '2025-12-21 14:00:00', 11, 'scheduled', '{\"employee_id\":11,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-15 08:53:58', '2025-12-15 08:53:58'),
+(321, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-15 06:00:00', '2025-12-15 14:00:00', 12, 'scheduled', '{\"employee_id\":12,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-15 08:53:58', '2025-12-15 08:53:58'),
+(322, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-16 06:00:00', '2025-12-16 14:00:00', 12, 'scheduled', '{\"employee_id\":12,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-15 08:53:58', '2025-12-15 08:53:58'),
+(323, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-17 06:00:00', '2025-12-17 14:00:00', 12, 'scheduled', '{\"employee_id\":12,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-15 08:53:58', '2025-12-15 08:53:58'),
+(324, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-18 06:00:00', '2025-12-18 14:00:00', 12, 'scheduled', '{\"employee_id\":12,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-15 08:53:58', '2025-12-15 08:53:58'),
+(325, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-19 06:00:00', '2025-12-19 14:00:00', 12, 'scheduled', '{\"employee_id\":12,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-15 08:53:58', '2025-12-15 08:53:58'),
+(326, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-21 06:00:00', '2025-12-21 14:00:00', 12, 'scheduled', '{\"employee_id\":12,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-15 08:53:58', '2025-12-15 08:53:58'),
+(327, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-15 06:00:00', '2025-12-15 14:00:00', 13, 'scheduled', '{\"employee_id\":13,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-15 08:53:58', '2025-12-15 08:53:58'),
+(328, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-16 06:00:00', '2025-12-16 14:00:00', 13, 'scheduled', '{\"employee_id\":13,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-15 08:53:58', '2025-12-15 08:53:58'),
+(329, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-17 06:00:00', '2025-12-17 14:00:00', 13, 'scheduled', '{\"employee_id\":13,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-15 08:53:58', '2025-12-15 08:53:58'),
+(330, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-19 06:00:00', '2025-12-19 14:00:00', 13, 'scheduled', '{\"employee_id\":13,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-15 08:53:58', '2025-12-15 08:53:58'),
+(331, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-20 06:00:00', '2025-12-20 14:00:00', 13, 'scheduled', '{\"employee_id\":13,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-15 08:53:58', '2025-12-15 08:53:58'),
+(332, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-21 06:00:00', '2025-12-21 14:00:00', 13, 'scheduled', '{\"employee_id\":13,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-15 08:53:58', '2025-12-15 08:53:58'),
+(333, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-15 06:00:00', '2025-12-15 14:00:00', 14, 'scheduled', '{\"employee_id\":14,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-15 08:53:58', '2025-12-15 08:53:58'),
+(334, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-16 06:00:00', '2025-12-16 14:00:00', 14, 'scheduled', '{\"employee_id\":14,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-15 08:53:58', '2025-12-15 08:53:58'),
+(335, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-17 06:00:00', '2025-12-17 14:00:00', 14, 'scheduled', '{\"employee_id\":14,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-15 08:53:58', '2025-12-15 08:53:58'),
+(336, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-18 06:00:00', '2025-12-18 14:00:00', 14, 'scheduled', '{\"employee_id\":14,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-15 08:53:59', '2025-12-15 08:53:59'),
+(337, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-20 06:00:00', '2025-12-20 14:00:00', 14, 'scheduled', '{\"employee_id\":14,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-15 08:53:59', '2025-12-15 08:53:59'),
+(338, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-21 06:00:00', '2025-12-21 14:00:00', 14, 'scheduled', '{\"employee_id\":14,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-15 08:53:59', '2025-12-15 08:53:59'),
+(339, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-15 06:00:00', '2025-12-15 14:00:00', 15, 'scheduled', '{\"employee_id\":15,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-15 08:53:59', '2025-12-15 08:53:59'),
+(340, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-16 06:00:00', '2025-12-16 14:00:00', 15, 'scheduled', '{\"employee_id\":15,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-15 08:53:59', '2025-12-15 08:53:59'),
+(341, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-17 06:00:00', '2025-12-17 14:00:00', 15, 'scheduled', '{\"employee_id\":15,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-15 08:53:59', '2025-12-15 08:53:59'),
+(342, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-18 06:00:00', '2025-12-18 14:00:00', 15, 'scheduled', '{\"employee_id\":15,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-15 08:53:59', '2025-12-15 08:53:59'),
+(343, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-20 06:00:00', '2025-12-20 14:00:00', 15, 'scheduled', '{\"employee_id\":15,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-15 08:53:59', '2025-12-15 08:53:59'),
+(344, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-21 06:00:00', '2025-12-21 14:00:00', 15, 'scheduled', '{\"employee_id\":15,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-15 08:53:59', '2025-12-15 08:53:59'),
+(345, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-19 06:00:00', '2025-12-19 14:00:00', 8, 'scheduled', '{\"employee_id\":8,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-15 08:54:04', '2025-12-15 08:54:04'),
+(346, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-15 06:00:00', '2025-12-15 14:00:00', 10, 'scheduled', '{\"employee_id\":10,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-15 08:54:04', '2025-12-15 08:54:04'),
+(347, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-17 06:00:00', '2025-12-17 14:00:00', 11, 'scheduled', '{\"employee_id\":11,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-15 08:54:04', '2025-12-15 08:54:04'),
+(348, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-20 06:00:00', '2025-12-20 14:00:00', 12, 'scheduled', '{\"employee_id\":12,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-15 08:54:04', '2025-12-15 08:54:04'),
+(349, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-18 06:00:00', '2025-12-18 14:00:00', 13, 'scheduled', '{\"employee_id\":13,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-15 08:54:04', '2025-12-15 08:54:04'),
+(350, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-19 06:00:00', '2025-12-19 14:00:00', 14, 'scheduled', '{\"employee_id\":14,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-15 08:54:04', '2025-12-15 08:54:04'),
+(351, 'Shift: Morning', 'Auto-generated morning shift', 'shift', '2025-12-19 06:00:00', '2025-12-19 14:00:00', 15, 'scheduled', '{\"employee_id\":15,\"shift_type\":\"morning\",\"break_times\":[],\"responsibilities\":[]}', 1, '2025-12-15 08:54:04', '2025-12-15 08:54:04');
 
 -- --------------------------------------------------------
 
@@ -1154,7 +1332,8 @@ CREATE TABLE `suppliers` (
 --
 
 INSERT INTO `suppliers` (`id`, `name`, `phone`, `email`, `address`, `created_at`) VALUES
-(1, 'MUCYO Josue', '0793749143', 'josh@gmail.com', 'Muhanga', '2025-11-28 00:00:00');
+(1, 'MUCYO Josue', '0793749143', 'josh@gmail.com', 'Muhanga', '2025-11-28 00:00:00'),
+(3, 'NIYONSHUTI Isaac', '0789000303', 'isaac@gmail.com', 'Efotec', '2025-11-29 08:36:55');
 
 -- --------------------------------------------------------
 
@@ -1177,7 +1356,20 @@ CREATE TABLE `supplier_trips` (
 --
 
 INSERT INTO `supplier_trips` (`id`, `supplier_id`, `trip_date`, `status`, `note`, `created_by`, `created_at`) VALUES
-(1, 1, '2025-11-28', 'open', 'in cyakabiri', 1, '2025-11-28 13:29:43');
+(1, 1, '2025-11-28', 'open', 'in cyakabiri', 1, '2025-11-28 13:29:43'),
+(2, 1, '2025-11-28', 'open', '', 1, '2025-11-28 21:02:42'),
+(3, 2, '2025-11-28', 'open', '', 1, '2025-11-28 21:13:36'),
+(4, 2, '2025-11-29', 'open', '', 1, '2025-11-29 07:41:16'),
+(5, 2, '2025-11-29', 'open', '', 1, '2025-11-29 08:22:48'),
+(6, 2, '2025-11-29', 'open', '', 1, '2025-11-29 08:27:07'),
+(7, 3, '2025-11-29', 'open', '', 1, '2025-11-29 08:39:39'),
+(8, 2, '2025-11-29', 'open', '', 1, '2025-11-29 08:40:49'),
+(9, 3, '2025-11-29', 'open', '', 1, '2025-11-29 08:48:40'),
+(10, 3, '2025-11-29', 'open', '', 1, '2025-11-29 08:48:40'),
+(11, 3, '2025-11-29', 'open', '', 1, '2025-11-29 11:23:48'),
+(12, 1, '2025-11-29', 'open', '', 1, '2025-11-29 21:13:53'),
+(13, 1, '2025-12-15', 'open', 'route kibuye', 1, '2025-12-15 10:13:56'),
+(14, 3, '2025-12-15', 'open', '', 1, '2025-12-15 10:49:31');
 
 -- --------------------------------------------------------
 
@@ -1201,8 +1393,20 @@ CREATE TABLE `supplier_trip_items` (
 
 INSERT INTO `supplier_trip_items` (`id`, `trip_id`, `product_id`, `qty_dispatched`, `qty_sold`, `qty_returned`, `created_at`) VALUES
 (1, 1, 6, 100, 0, 90, '2025-11-28 13:29:43'),
-(2, 1, 2, 100, 0, 90, '2025-11-28 13:29:43'),
-(3, 1, 5, 10, 0, 0, '2025-11-28 13:29:43');
+(2, 1, 2, 100, 0, 70, '2025-11-28 13:29:43'),
+(3, 1, 5, 10, 0, 0, '2025-11-28 13:29:43'),
+(4, 2, 2, 80, 0, 30, '2025-11-28 21:02:42'),
+(5, 2, 6, 90, 0, 40, '2025-11-28 21:02:42'),
+(6, 3, 6, 40, 0, 10, '2025-11-28 21:13:36'),
+(7, 4, 6, 10, 0, 5, '2025-11-29 07:41:16'),
+(8, 4, 2, 30, 0, 20, '2025-11-29 07:41:16'),
+(9, 6, 6, 5, 0, 0, '2025-11-29 08:27:07'),
+(10, 6, 2, 1, 0, 0, '2025-11-29 08:27:07'),
+(11, 7, 2, 19, 0, 5, '2025-11-29 08:39:39'),
+(12, 8, 5, 10, 0, 0, '2025-11-29 08:40:49'),
+(13, 11, 2, 6, 0, 1, '2025-11-29 11:23:48'),
+(14, 13, 6, 100, 0, 50, '2025-12-15 10:13:56'),
+(15, 14, 2, 10, 0, 0, '2025-12-15 10:49:31');
 
 -- --------------------------------------------------------
 
@@ -1305,7 +1509,7 @@ CREATE TABLE `user_preferences` (
 --
 
 INSERT INTO `user_preferences` (`id`, `user_id`, `email_notifications`, `sms_notifications`, `theme`, `language`, `created_at`, `updated_at`) VALUES
-(1, 1, 1, 1, 'dark', 'en', '2025-11-08 12:30:33', '2025-11-17 16:04:15'),
+(1, 1, 1, 1, 'dark', 'en', '2025-11-08 12:30:33', '2025-11-30 10:49:30'),
 (2, 2, 1, 0, 'dark', 'rw', '2025-11-08 12:30:33', '2025-11-17 15:57:06'),
 (3, 5, 1, 0, 'dark', 'en', '2025-11-15 12:32:54', '2025-11-15 12:32:54');
 
@@ -1533,19 +1737,19 @@ ALTER TABLE `logs`
 -- AUTO_INCREMENT for table `material_orders`
 --
 ALTER TABLE `material_orders`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
 
 --
 -- AUTO_INCREMENT for table `material_order_items`
 --
 ALTER TABLE `material_order_items`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=80;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=83;
 
 --
 -- AUTO_INCREMENT for table `notifications`
 --
 ALTER TABLE `notifications`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=124;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=147;
 
 --
 -- AUTO_INCREMENT for table `payrolls`
@@ -1593,7 +1797,7 @@ ALTER TABLE `product_daily_stats`
 -- AUTO_INCREMENT for table `product_material_plans`
 --
 ALTER TABLE `product_material_plans`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
 
 --
 -- AUTO_INCREMENT for table `purchases`
@@ -1629,31 +1833,31 @@ ALTER TABLE `recipe_items`
 -- AUTO_INCREMENT for table `sales`
 --
 ALTER TABLE `sales`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=53;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=74;
 
 --
 -- AUTO_INCREMENT for table `schedules`
 --
 ALTER TABLE `schedules`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=225;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=352;
 
 --
 -- AUTO_INCREMENT for table `suppliers`
 --
 ALTER TABLE `suppliers`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `supplier_trips`
 --
 ALTER TABLE `supplier_trips`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
 
 --
 -- AUTO_INCREMENT for table `supplier_trip_items`
 --
 ALTER TABLE `supplier_trip_items`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT for table `system_settings`
