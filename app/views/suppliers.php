@@ -214,12 +214,7 @@
     <!-- Unified Tabs -->
     <div class="border-b border-gray-700 mb-6">
         <nav class="flex space-x-8">
-            <button type="button" class="tab-button py-2 border-b-2 font-medium text-sm" data-tab="sale" data-active="true">
-                <span class="flex items-center">
-                    <span>Record Sale</span>
-                </span>
-            </button>
-            <button type="button" class="tab-button py-2 border-b-2 font-medium text-sm" data-tab="trip-allocation">
+            <button type="button" class="tab-button py-2 border-b-2 font-medium text-sm" data-tab="trip-allocation" data-active="true">
                 <span class="flex items-center">
                     <span>Trip Allocation</span>
                 </span>
@@ -243,98 +238,18 @@
 
     <!-- Tab Content Container -->
     <div id="tab-content">
-        <!-- Sale Tab -->
-        <div id="tab-sale" class="tab-panel active">
-            <form method="POST" action="?page=suppliers" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6" id="supplierSaleForm">
-                <input type="hidden" name="mode" value="create_supplier_sale">
-                <input type="hidden" name="supplier_id" id="supplierSaleSupplierId" value="">
-
-                <div class="md:col-span-2">
-                    <label class="block text-gray-400 text-xs mb-1">Product</label>
-                    <select name="product_id" required 
-                            class="w-full bg-gray-700 text-white px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-lime-500" id="supplierSaleProduct">
-                        <option value="">-- Choose Product --</option>
-                        <?php foreach ($products as $product): ?>
-                            <option value="<?= htmlspecialchars($product['id']) ?>" data-price="<?= htmlspecialchars($product['price'] ?? 0) ?>" data-stock="<?= htmlspecialchars($product['stock'] ?? 0) ?>">
-                                <?= htmlspecialchars($product['sku'] ?? 'No Code') ?> — <?= htmlspecialchars($product['name']) ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-
-                <div class="md:col-span-2">
-                    <label class="block text-gray-400 text-xs mb-1">Customer</label>
-                    <select name="customer_id" id="supplierSaleCustomer" class="w-full bg-gray-700 text-white px-3 py-2 rounded-lg text-sm">
-                        <option value="" data-type="Regular">-- Walk-in Customer --</option>
-                        <?php foreach ($customers as $customer): ?>
-                            <option value="<?= htmlspecialchars($customer['id']) ?>" data-type="<?= htmlspecialchars($customer['customer_type']) ?>">
-                                <?= htmlspecialchars($customer['name']) ?>
-                                <?= !empty($customer['phone']) ? '(' . htmlspecialchars($customer['phone']) . ')' : '' ?>
-                                - <?= htmlspecialchars($customer['customer_type']) ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-
-                <div>
-                    <label class="block text-gray-400 text-xs mb-1">Quantity</label>
-                    <input type="number" name="quantity" min="1" required
-                           class="w-full bg-gray-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-lime-500"
-                           id="supplierSaleQty">
-                </div>
-
-                <div>
-                    <label class="block text-gray-400 text-xs mb-1">Unit Price (Rwf)</label>
-                    <input type="number" name="unit_price" step="0.01" required
-                           class="w-full bg-gray-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-lime-500"
-                           id="supplierSaleUnitPrice">
-                </div>
-
-                <div>
-                    <label class="block text-gray-400 text-xs mb-1">Customer Type</label>
-                    <select name="customer_type" id="supplierSaleCustomerType" class="w-full bg-gray-700 text-white px-3 py-2 rounded-lg text-sm">
-                        <option value="Regular">Regular</option>
-                        <option value="Wholesale">Wholesale</option>
-                        <option value="Online">Online</option>
-                        <option value="VIP">VIP</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label class="block text-gray-400 text-xs mb-1">Payment Method</label>
-                    <select name="payment_method" class="w-full bg-gray-700 text-white px-3 py-2 rounded-lg text-sm">
-                        <option value="Cash">Cash</option>
-                        <option value="MoMo">MoMo</option>
-                        <option value="Card">Card</option>
-                        <option value="Bank Transfer">Bank Transfer</option>
-                    </select>
-                </div>
-
-                <div class="md:col-span-2">
-                    <div class="bg-gray-700 rounded-lg p-3 flex justify-between items-center">
-                        <span class="text-gray-400 text-xs">Total Amount</span>
-                        <span id="supplierSaleTotal" class="text-lime-400 font-bold text-lg">0.00 Rwf</span>
-                    </div>
-                    <div id="supplierSaleStockBox" class="mt-2 p-2 rounded-lg hidden text-xs"></div>
-                    <div class="mt-3 flex justify-end space-x-2">
-                        <button type="submit" class="bg-lime-500 hover:bg-lime-600 text-white font-semibold px-4 py-2 rounded-lg text-sm">Record Sale</button>
-                    </div>
-                </div>
-            </form>
-        </div>
-
         <!-- Trip Allocation Tab -->
-        <div id="tab-trip-allocation" class="tab-panel hidden">
-            <h4 class="text-sm font-semibold text-lime-400 mb-4">Allocate Sold Quantities from Trips</h4>
+        <div id="tab-trip-allocation" class="tab-panel active">
+            <h4 class="text-sm font-semibold text-lime-400 mb-4">Allocate Sales from Today's Supplier Trips</h4>
             <form method="POST" action="?page=suppliers" class="grid grid-cols-1 md:grid-cols-2 gap-4" id="tripAllocationForm">
                 <input type="hidden" name="mode" value="allocate_trip_sale">
                 <input type="hidden" name="supplier_id" id="tripAllocSupplierId" value="">
 
                 <div class="md:col-span-2">
-                    <label class="block text-gray-400 text-xs mb-1">Trip Product</label>
+                    <label class="block text-gray-400 text-xs mb-1">Trip Product (today)</label>
                     <select name="supplier_trip_item_id" id="tripItemSelect" required
                             class="w-full bg-gray-700 text-white px-3 py-2 rounded-lg text-sm">
-                        <option value="">-- Choose Trip Product --</option>
+                        <option value="">-- Select a trip product from today --</option>
                         <?php if (!empty($supplierTripItems)): ?>
                             <?php foreach ($supplierTripItems as $supId => $items): ?>
                                 <?php foreach ($items as $it): ?>
@@ -353,7 +268,7 @@
                             <?php endforeach; ?>
                         <?php endif; ?>
                     </select>
-                    <p class="text-gray-500 text-xs mt-1">Only products with remaining sold quantity will be shown for this supplier.</p>
+                    <p class="text-gray-500 text-xs mt-1">Only products from today's trips with remaining quantity are available for allocation.</p>
                 </div>
 
                 <input type="hidden" name="product_id" id="tripProductId" value="">
@@ -407,7 +322,7 @@
 
                 <div class="md:col-span-2 flex justify-between items-center mt-2">
                     <span id="tripTotalDisplay" class="text-gray-400 text-xs">Total: 0.00 Rwf</span>
-                    <button type="submit" class="bg-fuchsia-500 hover:bg-fuchsia-600 text-white font-semibold px-4 py-2 rounded-lg text-sm">Allocate &amp; Record Sale</button>
+                    <button type="submit" class="bg-fuchsia-500 hover:bg-fuchsia-600 text-white font-semibold px-4 py-2 rounded-lg text-sm">Record Sale</button>
                 </div>
             </form>
         </div>
@@ -417,7 +332,7 @@
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <!-- Create Trip Section -->
                 <div class="bg-gray-900 rounded-lg p-4">
-                    <h4 class="text-sm font-semibold text-lime-400 mb-3">Create Supplier Trip</h4>
+                    <h4 class="text-sm font-semibold text-lime-400 mb-3">Create Today's Supplier Trip</h4>
                     <form method="POST" action="?page=suppliers" class="space-y-3" id="supplierTripCreateForm">
                         <input type="hidden" name="mode" value="create_supplier_trip">
                         <input type="hidden" name="supplier_id" id="tripCreateSupplierId" value="">
@@ -466,11 +381,11 @@
 
                 <!-- Edit Returns Section -->
                 <div class="bg-gray-900 rounded-lg p-4">
-                    <h4 class="text-sm font-semibold text-lime-400 mb-3">Edit Trip Returns</h4>
+                    <h4 class="text-sm font-semibold text-lime-400 mb-3">Edit Returns for Today's Trips</h4>
                     <div class="space-y-2">
-                        <label class="block text-gray-400 text-xs mb-1">Select Trip</label>
+                        <label class="block text-gray-400 text-xs mb-1">Select Trip (today)</label>
                         <select id="supplierTripSelect" class="w-full bg-gray-700 text-white px-3 py-2 rounded-lg text-xs">
-                            <option value="">-- Choose Trip --</option>
+                            <option value="">-- Select a trip from today --</option>
                             <?php if (!empty($supplierTripsBySupplier)): ?>
                                 <?php foreach ($supplierTripsBySupplier as $supId => $trips): ?>
                                     <?php foreach ($trips as $t): ?>
@@ -524,7 +439,7 @@
                                 <button type="submit" class="bg-fuchsia-500 hover:bg-fuchsia-600 text-white font-semibold px-4 py-2 rounded-lg text-xs">Save Returns &amp; Restock</button>
                             </div>
                         </form>
-                        <p id="supplierTripReturnsEmpty" class="text-gray-500 text-xs mt-2">Choose a trip to edit its returns.</p>
+                        <p id="supplierTripReturnsEmpty" class="text-gray-500 text-xs mt-2">No trip selected. Choose one of today's trips above to review or edit returns.</p>
                     </div>
                 </div>
             </div>
@@ -816,7 +731,7 @@ let supplierTabs = null;
 // Unified Tab Management
 class SupplierModalTabs {
     constructor() {
-        this.currentTab = 'sale';
+        this.currentTab = 'trip-allocation';
         this.currentSupplierId = null;
         this.init();
     }
@@ -824,7 +739,7 @@ class SupplierModalTabs {
     init() {
         this.bindTabEvents();
         this.bindFormEvents();
-        this.switchTab('sale');
+        this.switchTab('trip-allocation');
     }
 
     bindTabEvents() {
@@ -1036,7 +951,7 @@ class SupplierModalTabs {
                                 option.setAttribute('data-product-id', item.product_id);
                                 option.setAttribute('data-remaining', item.remaining_qty);
                                 option.setAttribute('data-price', item.remaining_qty > 0 ? (item.product_price || 0) : 0);
-                                const label = `#${trip.id} ${trip.trip_date} — ${item.product_name} (sold ${item.sold_qty}, remaining ${item.remaining_qty})`;
+                                const label = `#${trip.id} ${trip.trip_date} — ${item.product_name} ${item.sold_qty}, remaining ${item.remaining_qty})`;
                                 option.textContent = label;
                                 tripItemSelect.appendChild(option);
                             }
@@ -1123,18 +1038,10 @@ class SupplierModalTabs {
     }
 
     bindFormEvents() {
-        this.bindSaleForm();
         this.bindAllocationForm();
         this.bindTripForm();
         this.bindEditForm();
         this.bindReturnsForm();
-    }
-
-    bindSaleForm() {
-        const form = document.getElementById('supplierSaleForm');
-        if (form) {
-            form.addEventListener('submit', this.handleFormSubmit.bind(this));
-        }
     }
 
     bindAllocationForm() {
@@ -1231,10 +1138,7 @@ class SupplierModalTabs {
     resetForm(form) {
         form.reset();
         
-        // Reset specific fields if needed
-        const saleTotal = document.getElementById('supplierSaleTotal');
-        if (saleTotal) saleTotal.textContent = '0.00 Rwf';
-        
+        // Reset specific fields if needed (trip allocation total)
         const tripTotalDisplay = document.getElementById('tripTotalDisplay');
         if (tripTotalDisplay) tripTotalDisplay.textContent = 'Total: 0.00 Rwf';
     }
@@ -1306,7 +1210,6 @@ function openSupplierHistoryModal(supplierId, supplierName) {
     if (!modal) return;
     
     // Set supplier ID in all relevant forms
-    document.getElementById('supplierSaleSupplierId').value = supplierId;
     document.getElementById('tripAllocSupplierId').value = supplierId;
     document.getElementById('tripCreateSupplierId').value = supplierId;
     document.getElementById('supplierHistoryId').value = supplierId;
@@ -1321,7 +1224,7 @@ function openSupplierHistoryModal(supplierId, supplierName) {
     if (window.supplierTabs) {
         window.supplierTabs.currentSupplierId = supplierId;
         window.supplierTabs.filterTripItems(supplierId);
-        window.supplierTabs.switchTab('sale');
+        window.supplierTabs.switchTab('trip-allocation');
     }
     
     modal.classList.remove('hidden');
@@ -1370,22 +1273,6 @@ function removeTripCreateRow(button) {
 }
 
 function initializeCalculations() {
-    // Sale form calculations
-    const saleQty = document.getElementById('supplierSaleQty');
-    const saleUnitPrice = document.getElementById('supplierSaleUnitPrice');
-    const saleTotal = document.getElementById('supplierSaleTotal');
-    
-    if (saleQty && saleUnitPrice && saleTotal) {
-        const calculateSaleTotal = () => {
-            const qty = parseInt(saleQty.value) || 0;
-            const price = parseFloat(saleUnitPrice.value) || 0;
-            saleTotal.textContent = (qty * price).toFixed(2) + ' Rwf';
-        };
-        
-        saleQty.addEventListener('input', calculateSaleTotal);
-        saleUnitPrice.addEventListener('input', calculateSaleTotal);
-    }
-    
     // Trip allocation calculations
     const tripQty = document.getElementById('tripQty');
     const tripUnitPrice = document.getElementById('tripUnitPrice');

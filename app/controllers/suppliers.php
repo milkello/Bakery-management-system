@@ -18,7 +18,7 @@ $suppliers = $conn->query("SELECT id, name, phone, email, address, created_at FR
 $products = $conn->query("SELECT * FROM products ORDER BY name ASC")->fetchAll(PDO::FETCH_ASSOC);
 $customers = $conn->query("SELECT id, name, customer_type, phone FROM customers ORDER BY name ASC")->fetchAll(PDO::FETCH_ASSOC);
 
-// Load supplier trip items with sold/remaining quantities for allocation
+// Load today's supplier trip items with sold/remaining quantities for allocation
 $supplierTripItems = [];
 $supplierTripsBySupplier = [];
 try {
@@ -39,6 +39,7 @@ try {
         JOIN supplier_trip_items i ON i.trip_id = t.id
         JOIN products p ON p.id = i.product_id
         LEFT JOIN sales s ON s.supplier_trip_item_id = i.id
+        WHERE DATE(t.trip_date) = CURDATE()
         GROUP BY t.id, t.supplier_id, t.trip_date, t.status,
                  i.id, i.product_id, i.qty_dispatched, i.qty_returned,
                  p.name, p.sku
@@ -628,7 +629,7 @@ function getUpdatedSupplierData($conn, $supplierId) {
             JOIN supplier_trip_items i ON i.trip_id = t.id
             JOIN products p ON p.id = i.product_id
             LEFT JOIN sales s ON s.supplier_trip_item_id = i.id
-            WHERE t.supplier_id = ?
+            WHERE t.supplier_id = ? AND DATE(t.trip_date) = CURDATE()
             GROUP BY t.id, t.supplier_id, t.trip_date, t.status,
                      i.id, i.product_id, i.qty_dispatched, i.qty_returned,
                      p.name, p.sku, p.price
@@ -767,7 +768,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'get_supplier_trips') {
                 JOIN supplier_trip_items i ON i.trip_id = t.id
                 JOIN products p ON p.id = i.product_id
                 LEFT JOIN sales s ON s.supplier_trip_item_id = i.id
-                WHERE t.supplier_id = ?
+                WHERE t.supplier_id = ? AND DATE(t.trip_date) = CURDATE()
                 GROUP BY t.id, t.supplier_id, t.trip_date, t.status,
                          i.id, i.product_id, i.qty_dispatched, i.qty_returned,
                          p.name, p.sku

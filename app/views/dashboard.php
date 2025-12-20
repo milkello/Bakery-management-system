@@ -28,7 +28,7 @@
                             <!-- <h3 class="text-2xl font-bold text-green-400"><?= $raw_materials ?> types</h3> -->
                             <h3 class="text-2xl font-bold text-lime-400"><?= number_format($pdo->query('SELECT SUM(unit_cost * stock_quantity) FROM raw_materials')->fetchColumn() ?: 0, 0) ?> Frw</h3>
                             <p class="text-green-400 text-sm"><?= number_format($daily_total_value_used, 0) ?> Frw used today</p>
-                            <p class="text-red-400 text-sm"><?= $low_stock_count == '0' ? 'No' : $low_stock_count ?> low stock products</p>
+                            <p class="text-red-400 text-sm"><?= $low_stock_count == '0' ? 'No' : $low_stock_count ?> low stock ingredients</p>
                         </div>
                         <i data-feather="package" class="text-lime-500 w-8 h-8"></i>
                     </div>

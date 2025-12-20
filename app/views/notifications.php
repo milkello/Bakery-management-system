@@ -55,7 +55,7 @@
             $typeColor = getNotificationColor($type['type']);
             $typeIcon = getNotificationIcon($type['type']);
         ?>
-        <div class="bg-gray-700 rounded-lg p-4 text-center">
+        <div class="bg-gray-700 rounded-lg p-4 text-center cursor-pointer notification-type-card" data-type="<?= htmlspecialchars($type['type']) ?>">
             <div class="w-10 h-10 <?= $typeColor['bg'] ?> rounded-full flex items-center justify-center mx-auto mb-2">
                 <i data-feather="<?= $typeIcon ?>" class="w-5 h-5 text-white"></i>
             </div>
@@ -72,7 +72,7 @@
         <h3 class="text-xl font-bold text-lime-400">All Notifications</h3>
         <div class="flex items-center space-x-2 text-gray-400">
             <i data-feather="filter" class="w-4 h-4"></i>
-            <span>Sorted by Latest</span>
+            <span id="notificationsFilterLabel">Sorted by latest · All types</span>
         </div>
     </div>
 
@@ -83,13 +83,13 @@
             <p class="text-gray-500">You're all caught up! No notifications to display.</p>
         </div>
     <?php else: ?>
-        <div class="space-y-4">
+        <div class="space-y-4" id="notificationsList">
             <?php foreach ($notifications as $note): 
                 $notificationColor = getNotificationColor($note['type']);
                 $notificationIcon = getNotificationIcon($note['type']);
                 $isUnread = !$note['is_read'];
             ?>
-            <div class="bg-gray-700 rounded-lg p-4 border-l-4 <?= $notificationColor['border'] ?> hover:bg-gray-600 transition-colors <?= $isUnread ? 'ring-2 ring-lime-500' : '' ?>">
+            <div class="bg-gray-700 rounded-lg p-4 border-l-4 <?= $notificationColor['border'] ?> hover:bg-gray-600 transition-colors <?= $isUnread ? 'ring-2 ring-lime-500' : '' ?> notification-item" data-type="<?= htmlspecialchars($note['type']) ?>">
                 <div class="flex justify-between items-start mb-2">
                     <div class="flex items-center space-x-3">
                         <div class="w-10 h-10 <?= $notificationColor['bg'] ?> rounded-full flex items-center justify-center">
@@ -122,6 +122,15 @@
                                 title="View details">
                             <i data-feather="eye" class="w-4 h-4"></i>
                         </button>
+                        <form method="POST" class="inline" onsubmit="return confirm('Delete this notification?');">
+                            <input type="hidden" name="notification_id" value="<?= $note['id'] ?>">
+                            <input type="hidden" name="delete_notification" value="1">
+                            <button type="submit" 
+                                    class="text-red-400 hover:text-red-300 transition-colors"
+                                    title="Delete notification">
+                                <i data-feather="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </form>
                     </div>
                 </div>
                 <div class="flex justify-between items-center mt-3">
@@ -214,6 +223,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const modalTitle = document.getElementById('modalTitle');
     const modalContent = document.getElementById('modalContent');
 
+
     // Close modal functions
     closeModal.addEventListener('click', () => {
         notificationModal.classList.add('hidden');
@@ -280,6 +290,50 @@ document.addEventListener("DOMContentLoaded", () => {
             if (notificationId) {
                 // You could add AJAX call here to automatically mark as read when viewed
             }
+        });
+    });
+
+    // Client-side filtering by notification type
+    const typeCards = document.querySelectorAll('.notification-type-card');
+    const notificationItems = document.querySelectorAll('.notification-item');
+    const filterLabel = document.getElementById('notificationsFilterLabel');
+    let activeType = null;
+
+    typeCards.forEach(card => {
+        card.addEventListener('click', () => {
+            const type = card.getAttribute('data-type');
+
+            // Toggle behaviour: clicking the same type again clears the filter
+            if (activeType === type) {
+                activeType = null;
+                notificationItems.forEach(item => {
+                    item.classList.remove('hidden');
+                });
+                if (filterLabel) {
+                    filterLabel.textContent = 'Sorted by latest · All types';
+                }
+                typeCards.forEach(c => c.classList.remove('ring-2', 'ring-lime-500'));
+                return;
+            }
+
+            activeType = type;
+
+            notificationItems.forEach(item => {
+                const itemType = item.getAttribute('data-type');
+                if (itemType === type) {
+                    item.classList.remove('hidden');
+                } else {
+                    item.classList.add('hidden');
+                }
+            });
+
+            if (filterLabel) {
+                const pretty = type.replace('_', ' ');
+                filterLabel.textContent = 'Sorted by latest · Type: ' + pretty;
+            }
+
+            typeCards.forEach(c => c.classList.remove('ring-2', 'ring-lime-500'));
+            card.classList.add('ring-2', 'ring-lime-500');
         });
     });
 

@@ -27,6 +27,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['clear_all'])) {
     exit;
 }
 
+// Handle delete single notification
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_notification'])) {
+    $notificationId = $_POST['notification_id'] ?? null;
+    if ($notificationId !== null) {
+        $stmt = $conn->prepare("DELETE FROM notifications WHERE id = ?");
+        $stmt->execute([$notificationId]);
+    }
+    header("Location: ?page=notifications");
+    exit;
+}
+
 // Check if is_read column exists, if not add it
 $checkColumn = $conn->query("SHOW COLUMNS FROM notifications LIKE 'is_read'");
 if ($checkColumn->rowCount() === 0) {

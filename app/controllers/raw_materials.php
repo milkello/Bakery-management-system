@@ -34,16 +34,16 @@ $low_stock_count = $pdo->query('SELECT COUNT(*) FROM raw_materials WHERE stock_q
 ?>
 
 <!-- Raw Materials Stats -->
-<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-    <div class="bg-gray-800 rounded-xl p-6 text-center">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+    <!-- <div class="bg-gray-800 rounded-xl p-6 text-center">
         <i data-feather="box" class="w-12 h-12 text-lime-500 mx-auto mb-4"></i>
         <h3 class="text-2xl font-bold text-lime-400"><?= $total_materials ?></h3>
         <p class="text-gray-400">Total Materials</p>
-    </div>
+    </div> -->
     <div class="bg-gray-800 rounded-xl p-6 text-center">
         <i data-feather="dollar-sign" class="w-12 h-12 text-fuchsia-500 mx-auto mb-4"></i>
         <h3 class="text-2xl font-bold text-fuchsia-400"><?= number_format($total_inventory_value, 0) ?> Rwf</h3>
-        <p class="text-gray-400">Inventory Value</p>
+        <p class="text-gray-400">Total Stock Value</p>
     </div>
     <div class="bg-gray-800 rounded-xl p-6 text-center">
         <i data-feather="alert-triangle" class="w-12 h-12 text-yellow-500 mx-auto mb-4"></i>
@@ -74,7 +74,6 @@ $low_stock_count = $pdo->query('SELECT COUNT(*) FROM raw_materials WHERE stock_q
             <thead>
                 <tr class="border-b border-gray-700">
                     <th class="text-left py-3 px-4 text-lime-400">Material</th>
-                    <th class="text-left py-3 px-4 text-lime-400">Category</th>
                     <th class="text-left py-3 px-4 text-lime-400">Stock</th>
                     <th class="text-left py-3 px-4 text-lime-400">Unit Cost</th>
                     <th class="text-left py-3 px-4 text-lime-400">Total Value</th>
@@ -101,11 +100,11 @@ $low_stock_count = $pdo->query('SELECT COUNT(*) FROM raw_materials WHERE stock_q
                             </div>
                         </div>
                     </td>
-                    <td class="py-3 px-4">
+                    <!-- <td class="py-3 px-4">
                         <span class="bg-gray-700 text-gray-300 px-3 py-1 rounded-full text-sm">
                             <?= htmlspecialchars($m['category'] ?? 'Uncategorized') ?>
                         </span>
-                    </td>
+                    </td> -->
                     <td class="py-3 px-4">
                         <div class="flex flex-col">
                             <span class="font-medium"><?= number_format($m['stock_quantity'], 3) ?></span>

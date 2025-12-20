@@ -178,7 +178,7 @@ foreach ($productionData as $pd) {
 
 // Fetch today's sales data from sales table
 $salesStmt = $conn->prepare('
-    SELECT product_id, SUM(total_price) as revenue
+    SELECT product_id,qty,SUM(total_price) as revenue
     FROM sales
     WHERE DATE(created_at) = CURDATE()
     GROUP BY product_id
@@ -212,7 +212,7 @@ foreach ($products as $product) {
         'product_id' => $pid,
         'stat_date' => $today,
         'produced' => $produced,
-        'sold' => $salesByProduct[$pid]['sold'] ?? 0,
+        'sold' => $salesByProduct[$pid]['qty'] ?? 0,
         'revenue' => $salesByProduct[$pid]['revenue'] ?? 0,
         'plan_value' => $plan_value,
         'product_value' => $product_value,

@@ -42,14 +42,14 @@ $avg_price = $pdo->query('SELECT AVG(price) FROM products')->fetchColumn();
 <!-- Products Stats -->
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
     <div class="bg-gray-800 rounded-xl p-6 text-center">
-        <i data-feather="package" class="w-12 h-12 text-lime-500 mx-auto mb-4"></i>
-        <h3 class="text-2xl font-bold text-lime-400"><?= $total_products ?></h3>
-        <p class="text-gray-400">Total Products</p>
-    </div>
-    <div class="bg-gray-800 rounded-xl p-6 text-center">
         <i data-feather="dollar-sign" class="w-12 h-12 text-fuchsia-500 mx-auto mb-4"></i>
         <h3 class="text-2xl font-bold text-fuchsia-400"><?= number_format($total_value, 0) ?> Rwf</h3>
         <p class="text-gray-400">Total Value</p>
+    </div>
+    <div class="bg-gray-800 rounded-xl p-6 text-center">
+        <i data-feather="package" class="w-12 h-12 text-lime-500 mx-auto mb-4"></i>
+        <h3 class="text-2xl font-bold text-lime-400"><?= $total_products ?></h3>
+        <p class="text-gray-400">Total Products</p>
     </div>
     <div class="bg-gray-800 rounded-xl p-6 text-center">
         <i data-feather="trending-up" class="w-12 h-12 text-lime-500 mx-auto mb-4"></i>

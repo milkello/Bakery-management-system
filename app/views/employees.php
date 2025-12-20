@@ -1,5 +1,5 @@
 <!-- Employee Stats -->
-<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
     <div class="bg-gray-800 rounded-xl p-6 text-center">
         <i data-feather="users" class="w-12 h-12 text-lime-500 mx-auto mb-4"></i>
         <h3 class="text-2xl font-bold text-lime-400"><?= $total_employees ?></h3>
@@ -10,11 +10,11 @@
         <h3 class="text-2xl font-bold text-fuchsia-400"><?= $current_working ?></h3>
         <p class="text-gray-400">Currently Working</p>
     </div>
-    <div class="bg-gray-800 rounded-xl p-6 text-center">
+    <!-- <div class="bg-gray-800 rounded-xl p-6 text-center">
         <i data-feather="award" class="w-12 h-12 text-lime-500 mx-auto mb-4"></i>
         <h3 class="text-2xl font-bold text-lime-400"><?= $avg_rating ?></h3>
         <p class="text-gray-400">Avg. Rating</p>
-    </div>
+    </div> -->
 </div>
 
 <!-- Employee Table -->
